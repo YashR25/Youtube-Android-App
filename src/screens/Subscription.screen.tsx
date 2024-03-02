@@ -15,28 +15,46 @@ import {colors} from '../utils/theme';
 import SubscriberListSkeleton from '../components/skeleton/SubscriberListSkeleton';
 import VideoListSkeleton from '../components/skeleton/VideoListSkeleton';
 import YoutubeItemSkeleton from '../components/skeleton/YoutubeItemSkeleton';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {RootParamList} from '../App';
 
-export default function Subscription() {
+type SubscriptionScreenProps = BottomTabScreenProps<
+  RootParamList,
+  'Subscription'
+>;
+
+export default function Subscription({navigation}: SubscriptionScreenProps) {
   const [selectedId, setSelectedId] = useState('');
   const dispatch = useDispatch<AppDispatch>();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const user: userInterface | null = useSelector(
     (state: RootState) => state.appConfigReducer.user,
   );
-  const subscriptions: [userInterface] | [] = useSelector(
+  const subscriptions: [userInterface] | null = useSelector(
     (state: RootState) => state.subsciptionReducer.subscriptions,
   );
-  const subscriptionVideos: [videoInterface] | [] = useSelector(
+  const subscriptionVideos: [videoInterface] | null = useSelector(
     (state: RootState) => state.subsciptionReducer.subscriptionVideos,
   );
   useEffect(() => {
     if (user) {
       dispatch(getSubscriptions(user?._id));
     }
-  }, []);
+  }, [navigation]);
+
+  useEffect(() => {
+    if (subscriptions && subscriptions[0]?._id) {
+      setSelectedId(subscriptions[0]?._id);
+    }
+  }, [subscriptions]);
 
   useEffect(() => {
     dispatch(getSubscriptionVideos(selectedId));
   }, [selectedId]);
+
+  const handleRefresh = () => {
+    dispatch(getSubscriptionVideos(selectedId));
+  };
 
   if (!subscriptions || !subscriptionVideos) {
     return (
@@ -49,6 +67,26 @@ export default function Subscription() {
           />
           {/* <VideoListSkeleton size={2} horizontal={false} /> */}
         </View>
+      </View>
+    );
+  }
+
+  console.log(subscriptionVideos);
+
+  if (subscriptions.length <= 0) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}>
+        <Text
+          style={{color: colors.gray, fontWeight: 'bold'}}
+          ellipsizeMode="tail">
+          Not subscribed to any channel yet
+        </Text>
       </View>
     );
   }
@@ -67,7 +105,23 @@ export default function Subscription() {
           horizontal
         />
       </View>
-      <VideoList data={subscriptionVideos} horizontal={false} />
+      {subscriptionVideos.length > 0 ? (
+        <VideoList
+          listEmptyComponent={() => <></>}
+          headerComponent={() => <></>}
+          data={subscriptionVideos}
+          horizontal={false}
+          handleRefresh={handleRefresh}
+          refreshing={refreshing}
+          shouldShowSubscriberButton={false}
+        />
+      ) : (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <Text style={{fontWeight: 'bold', color: colors.gray}}>
+            No any videos from this channel yet
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

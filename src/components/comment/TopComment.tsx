@@ -16,7 +16,7 @@ export default function TopComment({videoId, onPress}: TopCommentProps) {
     (state: RootState) => state.videoReducer.comments,
   );
 
-  if (comments.length <= 0) {
+  if (!comments) {
     return;
   }
 
@@ -26,18 +26,20 @@ export default function TopComment({videoId, onPress}: TopCommentProps) {
         <Text style={styles.title}>Comments</Text>
         <Text style={styles.commentsCount}>{comments.length}</Text>
       </View>
-      <View style={styles.commentContainer}>
-        <View style={styles.imageWrapper}>
-          <Image
-            style={styles.image}
-            source={{uri: comments[0]?.owner.avatar}}
-          />
+      {comments.length > 0 && (
+        <View style={styles.commentContainer}>
+          <View style={styles.imageWrapper}>
+            <Image
+              style={styles.image}
+              source={{uri: comments[0]?.owner.avatar}}
+            />
+          </View>
+          <View>
+            <Text style={styles.userName}>{comments[0]?.owner.fullName}</Text>
+            <Text>{comments[0]?.content}</Text>
+          </View>
         </View>
-        <View>
-          <Text style={styles.userName}>{comments[0]?.owner.fullName}</Text>
-          <Text>{comments[0]?.content}</Text>
-        </View>
-      </View>
+      )}
     </Pressable>
   );
 }
@@ -47,7 +49,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray,
     borderRadius: 20,
     padding: 8,
-    margin: 8,
   },
   titleContainer: {
     flexDirection: 'row',

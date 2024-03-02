@@ -18,6 +18,7 @@ export interface commentInterface {
   content: string;
   owner: userInterface;
   video: videoInterface;
+  isLiked: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,4 +30,12 @@ export interface tweetInterface {
   createdAt: string;
   updatedAt: string;
   isLiked: boolean;
+}
+
+export interface playlistInterface {
+  _id: string;
+  name: string;
+  videos: videoInterface[];
+  owner: string;
+  description: string;
 }

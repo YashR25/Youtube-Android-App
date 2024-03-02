@@ -42,6 +42,11 @@ export async function setupPlayer() {
 }
 
 export async function addTrack(video: videoInterface) {
+  const currentTrack = await TrackPlayer.getActiveTrack();
+  if (currentTrack) {
+    await TrackPlayer.remove([0]);
+  }
+
   await TrackPlayer.add({
     id: video._id,
     title: video.title,

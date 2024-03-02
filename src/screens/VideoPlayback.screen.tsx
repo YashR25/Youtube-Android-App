@@ -5,7 +5,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 import ChannelItem from '../components/channel/ChannelItem';
 import CommonIcon from '../components/CommonIcon';
 import MiniVideoItem from '../components/video/MiniVideoItem';
@@ -24,10 +24,11 @@ import TopComment from '../components/comment/TopComment';
 import {commentInterface} from '../interfaces/user';
 import {BottomSheetModal, BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
-import CommentItem from '../components/comment/CommentItem';
 import CustomVideo from '../components/CustomVideo';
 import CommentList from '../components/comment/CommentList';
 import CommentForm from '../components/comment/CommentForm';
+import {colors} from '../utils/theme';
+import {addVideoToWatchHistory} from '../store/slices/appConfigSlice';
 
 type VideoPlaybackProps = NativeStackScreenProps<
   RootParamList,
@@ -38,13 +39,15 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
   const videoID = route.params.videoId;
   const dispatch = useDispatch<AppDispatch>();
 
+  const user = useSelector((state: RootState) => state.appConfigReducer.user);
+
   const video: videoInterface | null = useSelector(
     (state: RootState) => state.videoReducer.video,
   );
   const comments: [commentInterface] | null = useSelector(
     (state: RootState) => state.videoReducer.comments,
   );
-  const videos: [videoInterface] | [] = useSelector(
+  const videos: videoInterface[] | null = useSelector(
     (state: RootState) => state.mainReducer.videos,
   );
   const isLiked: boolean = useSelector(
@@ -56,12 +59,15 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
     bottomSheetRef.current?.present();
   };
 
+  console.log('from videoplayback', video);
+
   useEffect(() => {
     dispatch(getVideoById(videoID));
     dispatch(getVideoComments(videoID));
   }, [route.params.videoId]);
 
   useEffect(() => {
+    dispatch(addVideoToWatchHistory(videoID));
     return () => {
       dispatch(setCurrentVideo(null));
     };
@@ -76,10 +82,10 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
   }
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
         {video && <CustomVideo video={video} />}
-        <View style={{height: '70%'}}>
+        <View style={{height: '70%', padding: 8}}>
           <ScrollView>
             <View style={styles.videoDescContainer}>
               <View style={styles.titleContainer}>
@@ -89,7 +95,7 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
                 <CommonIcon
                   name="chevron-down"
                   size={20}
-                  color="#000000"
+                  color={colors.text}
                   onPress={() => {}}
                 />
               </View>
@@ -101,34 +107,35 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
                 <CommonIcon
                   name={isLiked ? 'thumbs-up' : 'thumbs-o-up'}
                   size={20}
-                  color="#000000"
+                  color={colors.text}
                   onPress={() => {
                     dispatch(toggleLike(video._id));
                   }}
                 />
-                {/* <CommonIcon
+                <CommonIcon
                   name="thumbs-o-down"
                   size={20}
-                  color="#000000"
+                  color={colors.text}
                   onPress={() => {}}
-                /> */}
+                />
                 <CommonIcon
                   name="share"
                   size={20}
-                  color="#000000"
+                  color={colors.text}
                   onPress={() => {}}
                 />
                 <CommonIcon
                   name="ellipsis-h"
                   size={20}
-                  color="#000000"
+                  color={colors.text}
                   onPress={() => {}}
                 />
               </View>
             </View>
             <ChannelItem
-              channel={video?.owner}
-              isSubscribed={video?.isSubscribed!!}
+              channel={video.owner}
+              isSubscribed={video.isSubscribed}
+              visible={user?._id !== video.owner._id}
             />
             <TopComment videoId={video?._id} onPress={showBottomSheetHandler} />
             <View style={styles.upNext}>
@@ -140,7 +147,7 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
                     key={item._id}
                     video={item}
                     onPress={() => {
-                      dispatch(setCurrentVideo(video));
+                      dispatch(getVideoById(item._id));
                     }}
                   />
                 )}
@@ -151,13 +158,21 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
             <BottomSheetModal
               ref={bottomSheetRef}
               index={0}
-              snapPoints={snapPoints}>
+              snapPoints={snapPoints}
+              backgroundStyle={{backgroundColor: colors.background}}
+              handleIndicatorStyle={{backgroundColor: colors.text}}>
               <View
                 style={{
                   flex: 1,
+                  backgroundColor: colors.background,
+                  justifyContent: 'center',
                 }}>
-                {comments && comments?.length > 0 && (
+                {comments && comments?.length > 0 ? (
                   <CommentList comments={comments} />
+                ) : (
+                  <Text style={{color: colors.gray, alignSelf: 'center'}}>
+                    No comments yet
+                  </Text>
                 )}
                 <CommentForm videoId={video._id} />
               </View>
@@ -172,7 +187,7 @@ export default function VideoPlayback({navigation, route}: VideoPlaybackProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    overflow: 'scroll',
+    backgroundColor: colors.background,
   },
   videoWrapper: {
     overflow: 'hidden',
@@ -197,18 +212,18 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     fontSize: 20,
-    color: '#000000',
+    color: colors.text,
   },
   likeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   desc: {
-    color: '#4d4c4c',
+    color: colors.gray,
     marginRight: 8,
   },
   upNext: {
-    paddingHorizontal: 8,
+    padding: 8,
   },
   videoControlOverlay: {
     position: 'absolute',

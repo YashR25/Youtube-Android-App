@@ -8,10 +8,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {colors} from '../utils/theme';
 import {TextInput} from 'react-native-gesture-handler';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import {launchImageLibrary} from 'react-native-image-picker';
 import CustomIcon from '../components/CustomIcon';
 import {useDispatch} from 'react-redux';
 import {publishVideo, publishVideoProps} from '../store/slices/mainReducer';
@@ -23,27 +23,44 @@ import mime from 'mime';
 import * as Progress from 'react-native-progress';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootParamList} from '../App';
-
-const width = Dimensions.get('window').width;
+import {
+  pendingUploadsInterface,
+  setPendingUploads,
+} from '../store/slices/channelSlice';
+import {videoInterface} from '../interfaces/video';
 
 type PublushVideoProps = NativeStackScreenProps<RootParamList, 'PublishVideo'>;
 
-export default function PublishVideo({navigation}: PublushVideoProps) {
-  const dispatch = useDispatch<AppDispatch>();
+export default function PublishVideo({navigation, route}: PublushVideoProps) {
   const [progress, setProgress] = useState<number>(0);
   const [isloading, setIsLoading] = useState<boolean>(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
-  // const altPublishVideoHandler = async () => {
-  //   if (!videoUri || !title || !desc || !imageUri) {
-  //     Alert.alert('Error!!', 'All fields are required!!');
-  //     return;
-  //   }
-  //   try {
+  useEffect(() => {
+    setVideoUri(route.params.videoUri);
+  }, [route.params.videoUri]);
 
-  //   } catch (error) {
+  console.log(videoUri);
 
-  //   }
-  // }
+  const onSubmitHandler = () => {
+    if (!videoUri || !title || !desc || !imageUri) {
+      Alert.alert('Error!!', 'All fields are required!!');
+      return;
+    }
+    const videoToUpload: pendingUploadsInterface = {
+      videoUri,
+      title,
+      desc,
+      imageUri,
+      progress: 0,
+    };
+    dispatch(setPendingUploads(videoToUpload));
+    navigation.navigate('Profile', {shouldUpload: true});
+  };
 
   const publishVideoHandler = async () => {
     if (!videoUri || !title || !desc || !imageUri) {
@@ -66,7 +83,7 @@ export default function PublishVideo({navigation}: PublushVideoProps) {
 
     try {
       setIsLoading(false);
-      await axiosClient.post(`/api/v1/video/`, formData, {
+      await axiosClient.post(`/api/v1/video/publish/`, formData, {
         onUploadProgress: ({loaded, total}) => {
           console.log(Math.round((loaded * 100) / total!!));
           const progress = Math.round((loaded * 100) / total!!);
@@ -80,30 +97,26 @@ export default function PublishVideo({navigation}: PublushVideoProps) {
       console.log(error);
     } finally {
       setIsLoading(false);
-      navigation.navigate('Profile');
+      // navigation.navigate('Profile');
     }
 
     // dispatch(publishVideo(data));
   };
-  const [videoUri, setVideoUri] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
 
-  const videoPickerHandler = async () => {
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'video',
-        selectionLimit: 1,
-      });
-      console.log(result);
-      if (result.assets && result.assets[0]?.uri) {
-        setVideoUri(result.assets[0]?.uri);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const videoPickerHandler = async () => {
+  //   try {
+  //     const result = await launchImageLibrary({
+  //       mediaType: 'video',
+  //       selectionLimit: 1,
+  //     });
+  //     console.log(result);
+  //     if (result.assets && result.assets[0]?.uri) {
+  //       setVideoUri(result.assets[0]?.uri);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const imagePickerHandler = async () => {
     try {
@@ -120,19 +133,20 @@ export default function PublishVideo({navigation}: PublushVideoProps) {
   };
   return (
     <View style={styles.container}>
-      <Pressable style={styles.video} onPress={videoPickerHandler}>
+      {/* <Pressable style={styles.video} onPress={videoPickerHandler}>
         {!videoUri && <Text>Press to add video</Text>}
         {videoUri && <Text>{videoUri}</Text>}
-      </Pressable>
-      <Text style={styles.title}>Thumbnail</Text>
+      </Pressable> */}
+      {/* <Text style={styles.title}>Thumbnail</Text> */}
       <View style={styles.thumbnail}>
         <View style={styles.imageWrapper}>
           <Image
             source={{
               uri: imageUri
                 ? imageUri
-                : 'https://storage.googleapis.com/proudcity/mebanenc/uploads/2021/03/placeholder-image-300x225.png',
+                : 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png?format=jpg&quality=90&v=1530129081',
             }}
+            defaultSource={require('../assets/placeholder.jpeg')}
             style={styles.image}
           />
         </View>
@@ -147,12 +161,12 @@ export default function PublishVideo({navigation}: PublushVideoProps) {
         style={[styles.input, styles.descInput]}
         onChangeText={setDesc}
       />
-      <Pressable style={styles.publishBtn} onPress={publishVideoHandler}>
+      <Pressable style={styles.publishBtn} onPress={onSubmitHandler}>
         <Text style={styles.btnTxt}>Publish Video</Text>
       </Pressable>
       <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
         <Progress.Bar style={styles.progresBar} progress={progress} />
-        {isloading && <ActivityIndicator size={50} color={colors.text} />}
+        {/* {isloading && <ActivityIndicator size={50} color={colors.text} />} */}
       </View>
     </View>
   );
@@ -164,6 +178,7 @@ const styles = StyleSheet.create({
     padding: 8,
     gap: 20,
     backgroundColor: colors.background,
+    justifyContent: 'space-between',
   },
   video: {
     height: 100,
@@ -175,7 +190,7 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     fontSize: 20,
-    color: colors.background,
+    color: colors.text,
   },
   input: {
     padding: 8,
@@ -184,13 +199,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   descInput: {
-    height: 100,
+    height: 150,
   },
   publishBtn: {
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 8,
+    borderRadius: 20,
   },
   btnTxt: {
     color: 'white',
@@ -199,7 +215,7 @@ const styles = StyleSheet.create({
   thumbnail: {
     overflow: 'hidden',
     borderRadius: 20,
-    height: 100,
+    height: 200,
   },
   imageWrapper: {
     flex: 1,
@@ -221,6 +237,6 @@ const styles = StyleSheet.create({
     left: 8,
   },
   progresBar: {
-    width: '80%',
+    width: '100%',
   },
 });

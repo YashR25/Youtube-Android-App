@@ -1,8 +1,8 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import React, {useEffect} from 'react';
-import {StatusBar, StyleSheet, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, StatusBar, StyleSheet, View} from 'react-native';
 import Search from './screens/Search.screen';
 import Profile from './screens/ProfileScreen.screen';
 import Home from './screens/Home.screen';
@@ -22,10 +22,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Provider, useDispatch} from 'react-redux';
 import {getCurrentUser} from './store/slices/appConfigSlice';
 import store, {AppDispatch} from './store/store';
-import {videoInterface} from './interfaces/video';
-import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import PublishVideo from './screens/PublishVideo.screen';
+import {SocketProvider} from './context/SocketContext';
+import PlaylistDetail from './screens/PlaylistDetail.screen';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 
 export type RootParamList = {
   Home: undefined;
@@ -34,11 +35,18 @@ export type RootParamList = {
   Library: undefined;
   BottomTabNavigation: undefined;
   Search: undefined;
-  Profile: undefined;
+  Profile: {
+    shouldUpload: boolean;
+  };
   VideoPlayback: {
     videoId: string;
   };
-  PublishVideo: undefined;
+  PublishVideo: {
+    videoUri: string;
+  };
+  PlaylistDetail: {
+    playlistId: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootParamList>();
@@ -138,7 +146,9 @@ function App(): React.JSX.Element {
             return {
               header: () => (
                 <Header
-                  onProfile={() => navigation.navigate('Profile')}
+                  onProfile={() =>
+                    navigation.navigate('Profile', {shouldUpload: false})
+                  }
                   onSearch={() => navigation.navigate('Search')}
                 />
               ),
@@ -152,7 +162,7 @@ function App(): React.JSX.Element {
           options={{
             headerShadowVisible: false,
             headerStyle: {backgroundColor: colors.background},
-            headerTitleStyle: {color: colors.text},
+            headerTintColor: colors.text,
           }}
         />
         <Stack.Screen
@@ -160,23 +170,55 @@ function App(): React.JSX.Element {
           component={VideoPlayback}
           options={{headerShown: false}}
         />
-        <Stack.Screen name="PublishVideo" component={PublishVideo} />
+        <Stack.Screen
+          name="PublishVideo"
+          component={PublishVideo}
+          options={{
+            headerStyle: {backgroundColor: colors.background},
+            headerTintColor: colors.text,
+          }}
+        />
+        <Stack.Screen name="PlaylistDetail" component={PlaylistDetail} />
       </Stack.Navigator>
     );
   };
 
   const Root = () => {
     const {authToken, setAuthToken} = useAuth();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     useEffect(() => {
       const fetchToken = async () => {
+        setIsLoading(true);
         const fetchedToken = await AsyncStorage.getItem('accessToken');
         if (fetchedToken) {
           setAuthToken(fetchedToken);
         }
+        setIsLoading(false);
       };
       fetchToken();
     }, []);
-    return authToken ? <StackNavigation /> : <Auth />;
+
+    if (isLoading) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.background,
+          }}>
+          <ActivityIndicator size={50} color={colors.text} />
+        </View>
+      );
+    }
+
+    return authToken ? (
+      <SocketProvider>
+        <StackNavigation />
+      </SocketProvider>
+    ) : (
+      <Auth />
+    );
   };
 
   return (
@@ -188,7 +230,9 @@ function App(): React.JSX.Element {
         />
         <Provider store={store}>
           <AuthProvider>
-            <Root />
+            <BottomSheetModalProvider>
+              <Root />
+            </BottomSheetModalProvider>
           </AuthProvider>
         </Provider>
       </NavigationContainer>

@@ -3,6 +3,20 @@ import {setLoading, showToast} from './appConfigSlice';
 import axiosClient from '../../utils/axiosClient';
 import {videoInterface} from '../../interfaces/video';
 import {commentInterface} from '../../interfaces/user';
+import {getAllVideos} from './mainReducer';
+
+export const toggleCommentLike = createAsyncThunk(
+  '/comment/like',
+  async (body: string, thunkAPi) => {
+    try {
+      const res = await axiosClient.patch(`/api/v1/like/comment/${body}`);
+      console.log(res.data.data);
+      return res.data.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
 
 export const getVideoById = createAsyncThunk(
   '/video/:videoId',
@@ -80,9 +94,50 @@ export const toggleLike = createAsyncThunk(
   },
 );
 
+export const toggleSubscription = createAsyncThunk(
+  '/toggleSubscription/:channelId',
+  async (body: string, thunkApi) => {
+    try {
+      const res = await axiosClient.get(
+        `/api/v1/subscription/toggleSubscription/${body}`,
+      );
+      thunkApi.dispatch(getAllVideos());
+      return res.data.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
+
+export const deleteComment = createAsyncThunk(
+  'comment/delete/',
+  async (body: string, thunkApi) => {
+    try {
+      const res = await axiosClient.delete(`/api/v1/comment/${body}`);
+      console.log(res.data.data);
+      return {id: body, data: res.data.data};
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
+
+export const updateComment = createAsyncThunk(
+  'comment/update',
+  async (body: string, thunkApi) => {
+    try {
+      const res = await axiosClient.patch(`/api/v1/comment/${body}`);
+      console.log(res.data.data);
+      return res.data.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
+
 interface initialStateInterface {
   video: videoInterface | null;
-  comments: [commentInterface] | null;
+  comments: commentInterface[] | null;
   isLiked: boolean;
 }
 
@@ -114,6 +169,36 @@ const VideoPlaybackSlice = createSlice({
     builder.addCase(addVideoComment.fulfilled, (state, action) => {
       const comment = action.payload as commentInterface;
       state.comments?.push(comment);
+    });
+    builder.addCase(toggleSubscription.fulfilled, (state, action) => {
+      if (state.video) {
+        state.video.isSubscribed = action.payload.isSubscribed;
+      }
+    });
+    builder.addCase(toggleCommentLike.fulfilled, (state, action) => {
+      if (state.comments) {
+        const index = state.comments.findIndex(
+          comment => comment._id === action.payload.id,
+        );
+        if (index !== -1) {
+          state.comments[index].isLiked = action.payload.isLiked;
+        }
+      }
+    });
+    builder.addCase(deleteComment.fulfilled, (state, action) => {
+      if (state.comments) {
+        state.comments = state.comments.filter(comment => {
+          return comment._id !== action.payload.id;
+        });
+      }
+    });
+    builder.addCase(updateComment.fulfilled, (state, action) => {
+      if (state.comments) {
+        const index = state.comments.findIndex(comment => {
+          return comment._id === action.payload._id;
+        });
+        state.comments[index] = action.payload;
+      }
     });
   },
 });

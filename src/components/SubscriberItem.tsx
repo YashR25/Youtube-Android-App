@@ -1,6 +1,7 @@
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import React, {PropsWithChildren, isValidElement} from 'react';
 import Profile from './channel/Profile';
+import {colors} from '../utils/theme';
 
 type SubscriberItemProps = PropsWithChildren<{
   isSelected: boolean;
@@ -13,7 +14,7 @@ export default function SubscriberItem({
 }: SubscriberItemProps) {
   return (
     <Pressable
-      style={[styles.container, isSelected && {backgroundColor: 'red'}]}
+      style={[styles.container, isSelected && {backgroundColor: colors.gray}]}
       onPress={onPress}>
       <Profile onPress={() => {}} />
       <Text style={styles.text}>Lorem</Text>

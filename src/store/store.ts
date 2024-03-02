@@ -7,6 +7,7 @@ import trendingSlice from './slices/trendingSlice';
 import subscriptionSlice from './slices/subscriptionSlice';
 import LibrarySlice from './slices/LibrarySlice';
 import ChannelSlice from './slices/channelSlice';
+import PlaylistSlice from './slices/PlaylistSlice';
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     subsciptionReducer: subscriptionSlice,
     LibraryReducer: LibrarySlice,
     channelReducer: ChannelSlice,
+    playlistReducer: PlaylistSlice,
   },
 });
 

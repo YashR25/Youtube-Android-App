@@ -5,7 +5,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {PropsWithChildren, useEffect, useRef, useState} from 'react';
+import React, {
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {useSelector} from 'react-redux';
 import {videoInterface} from '../interfaces/video';
 import {RootState} from '../store/store';
@@ -22,6 +28,8 @@ import TrackPlayer, {
 } from 'react-native-track-player';
 import {addTrack, setupPlayer} from '../services/PlaybackService';
 import Slider from '@react-native-community/slider';
+import {colors} from '../utils/theme';
+import {BACKEND_URL} from '@env';
 
 type CustomVideoProps = PropsWithChildren<{
   video: videoInterface | null;
@@ -38,11 +46,28 @@ export default function CustomVideo({video}: CustomVideoProps) {
   const {position, duration} = useProgress();
   const [isCompleted, setIsCompleted] = useState(false);
 
+  const getVideoUrl = useCallback(
+    (url: string) => {
+      if (url && url.split('//').length > 1 && url.split('//')[0] === 'http:') {
+        return url;
+      } else {
+        return `${BACKEND_URL}/${url}`;
+      }
+    },
+    [video],
+  );
+
   async function setup() {
     let isSetup = await setupPlayer();
 
     if (isSetup) {
-      if (video) await addTrack(video!!);
+      if (video) {
+        const videoFileToAdd = {
+          publicId: video.videoFile.publicId,
+          url: getVideoUrl(video.videoFile.url),
+        };
+        await addTrack({...video, videoFile: videoFileToAdd});
+      }
     }
 
     setIsPlayerReady(isSetup);
@@ -53,7 +78,7 @@ export default function CustomVideo({video}: CustomVideoProps) {
     return () => {
       TrackPlayer.remove([0]);
     };
-  }, []);
+  }, [video]);
 
   const toggleClicked = () => {
     setClicked(prev => !prev);
@@ -137,6 +162,15 @@ export default function CustomVideo({video}: CustomVideoProps) {
 
   const [loading, setLoading] = useState(false);
 
+  if (!playingTrack) {
+    return (
+      <View
+        style={{height: '30%', alignItems: 'center', justifyContent: 'center'}}>
+        <ActivityIndicator size={50} color={colors.text} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.videoWrapper, {height: fullScreen ? '100%' : '30%'}]}>
       {loading && (
@@ -186,17 +220,17 @@ export default function CustomVideo({video}: CustomVideoProps) {
         <Pressable style={styles.videoControlOverlay} onPress={toggleClicked}>
           <View style={styles.controlCenter}>
             <Pressable onPress={() => seekTo(position - 10)}>
-              <CustomIcon name="fast-backward" size={20} color="white" />
+              <CustomIcon name="fast-backward" size={25} color={colors.text} />
             </Pressable>
             <Pressable onPress={togglePlaybackHandler}>
               <CustomIcon
                 name={isPlaying ? 'pause-circle' : 'play-circle'}
-                size={20}
-                color="white"
+                size={40}
+                color={colors.text}
               />
             </Pressable>
             <Pressable onPress={() => seekTo(position + 10)}>
-              <CustomIcon name="fast-forward" size={20} color="white" />
+              <CustomIcon name="fast-forward" size={25} color={colors.text} />
             </Pressable>
           </View>
           <Pressable style={styles.fullScreenIcon} onPress={toggleFullScreen}>
@@ -214,8 +248,9 @@ export default function CustomVideo({video}: CustomVideoProps) {
               style={{width: '70%', height: 40}}
               minimumValue={0}
               maximumValue={duration}
-              minimumTrackTintColor="#FFFFFF"
-              maximumTrackTintColor="#000000"
+              minimumTrackTintColor={colors.text}
+              maximumTrackTintColor={colors.gray}
+              thumbTintColor={colors.primary}
               value={position}
               onValueChange={(progress: number) => {
                 seekTo(progress);
@@ -234,6 +269,7 @@ export default function CustomVideo({video}: CustomVideoProps) {
 const styles = StyleSheet.create({
   videoWrapper: {
     overflow: 'hidden',
+    // aspectRatio: 16 / 9,
   },
   video: {
     width: '100%',
@@ -256,7 +292,8 @@ const styles = StyleSheet.create({
   },
   controlCenter: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 20,
+    alignItems: 'center',
   },
   seekContainer: {
     flexDirection: 'row',

@@ -4,14 +4,13 @@ import {setLoading, showToast} from './appConfigSlice';
 import axiosClient from '../../utils/axiosClient';
 
 export const getTrendingVideos = createAsyncThunk(
-  '/video/',
+  '/trending/video/',
   async (body, thunkApi) => {
     try {
       thunkApi.dispatch(setLoading(true));
       const res = await axiosClient.get(
         `/api/v1/video?sortBy=views&sortType=desc`,
       );
-      console.log(res.data.data.docs);
       return res.data.data.docs;
     } catch (error) {
       thunkApi.dispatch(

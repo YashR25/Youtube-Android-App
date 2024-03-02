@@ -24,6 +24,19 @@ export const getCurrentUser = createAsyncThunk(
   },
 );
 
+export const addVideoToWatchHistory = createAsyncThunk(
+  '/videoPlaybackSlice/watchHistort/add',
+  async (body: string, thunkApi) => {
+    try {
+      const res = await axiosClient.patch(`/api/v1/user/history/add/${body}`);
+      console.log(res.data.data);
+      return res.data.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
+
 interface initialStateInterface {
   isLoading: boolean;
   user: userInterface | null;
@@ -55,6 +68,9 @@ const appConfigSlice = createSlice({
   extraReducers: builder => {
     builder.addCase(getCurrentUser.fulfilled, (state, action) => {
       state.user = action.payload.currentUser;
+    });
+    builder.addCase(addVideoToWatchHistory.fulfilled, (state, action) => {
+      if (state.user) state.user.watchHistory = action.payload.watchHistory;
     });
   },
 });

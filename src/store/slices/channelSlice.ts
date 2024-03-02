@@ -8,7 +8,6 @@ export const getChannelStats = createAsyncThunk(
   async (body, thunkApi) => {
     try {
       const res = await axiosClient.get('/api/v1/dashboard/stats');
-      console.log(res.data.data);
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -22,7 +21,6 @@ export const getChannelVideos = createAsyncThunk(
   async (body, thunkApi) => {
     try {
       const res = await axiosClient.get('/api/v1/dashboard/videos');
-      console.log(res.data.data);
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -36,7 +34,6 @@ export const getChannelTweets = createAsyncThunk(
   async (body: string, thunkApi) => {
     try {
       const res = await axiosClient.get(`/api/v1/tweet/c/${body}`);
-      console.log(res.data.data);
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -70,6 +67,19 @@ export const toggleTweetLike = createAsyncThunk(
   },
 );
 
+export const deleteTweet = createAsyncThunk(
+  '/tweet/delete/',
+  async (body: string, thunkApi) => {
+    try {
+      const res = await axiosClient.delete(`/api/v1/tweet/${body}`);
+      console.log(res.data.data);
+      return {id: body, data: res.data.data};
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+);
+
 interface ChannelStatsInterface {
   subscribersCount: number;
   totalLikes: number;
@@ -79,20 +89,42 @@ interface ChannelStatsInterface {
 
 interface initialStateInterface {
   channelStats: ChannelStatsInterface | null;
-  videos: [videoInterface] | [];
-  tweets: [tweetInterface] | [];
+  videos: [videoInterface] | null;
+  tweets: tweetInterface[] | null;
+  pendingUploads: pendingUploadsInterface | null;
 }
 
 const initialState: initialStateInterface = {
   channelStats: null,
-  videos: [],
-  tweets: [],
+  videos: null,
+  tweets: null,
+  pendingUploads: null,
 };
+
+export interface pendingUploadsInterface {
+  videoUri: string;
+  title: string;
+  desc: string;
+  imageUri: string;
+  progress: number;
+}
 
 const ChannelSlice = createSlice({
   name: 'channelReducer',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    setPendingUploads: (state, action) => {
+      state.pendingUploads = action.payload;
+    },
+    addToVideos: (state, action) => {
+      state.videos?.push(action.payload);
+    },
+    setUploadingProgress: (state, action) => {
+      if (state.pendingUploads) {
+        state.pendingUploads.progress = action.payload;
+      }
+    },
+  },
   extraReducers: builder => {
     builder.addCase(getChannelStats.fulfilled, (state, action) => {
       state.channelStats = action.payload;
@@ -105,18 +137,31 @@ const ChannelSlice = createSlice({
     });
     builder.addCase(togglePublishStatus.fulfilled, (state, action) => {
       const fetchedVideo = action.payload as videoInterface;
-      const index = state.videos.findIndex(
-        video => video._id === fetchedVideo._id,
-      );
-      state.videos[index] = action.payload;
+      if (state.videos) {
+        const index = state.videos?.findIndex(
+          video => video._id === fetchedVideo._id,
+        );
+        if (index != -1) state.videos[index] = action.payload;
+      }
     });
     builder.addCase(toggleTweetLike.fulfilled, (state, action) => {
-      const index = state.tweets.findIndex(
-        tweet => tweet._id === action.payload.tweetId,
-      );
-      state.tweets[index].isLiked = action.payload.isLiked;
+      if (state.tweets) {
+        const index = state.tweets.findIndex(
+          tweet => tweet._id === action.payload.tweetId,
+        );
+        if (index) state.tweets[index].isLiked = action.payload.isLiked;
+      }
+    });
+    builder.addCase(deleteTweet.fulfilled, (state, action) => {
+      if (state.tweets) {
+        state.tweets = state.tweets.filter(tweet => {
+          return tweet._id !== action.payload.id;
+        });
+      }
     });
   },
 });
 
 export default ChannelSlice.reducer;
+export const {setPendingUploads, addToVideos, setUploadingProgress} =
+  ChannelSlice.actions;

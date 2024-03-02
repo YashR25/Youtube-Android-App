@@ -29,7 +29,7 @@ export const getSubscriptions = createAsyncThunk(
 );
 
 export const getSubscriptionVideos = createAsyncThunk(
-  '/video/',
+  '/subscriptions/video/',
   async (body: string, thunkApi) => {
     try {
       thunkApi.dispatch(setLoading(true));
@@ -51,13 +51,13 @@ export const getSubscriptionVideos = createAsyncThunk(
 );
 
 interface initialStateInterface {
-  subscriptions: [userInterface] | [];
-  subscriptionVideos: [videoInterface] | [];
+  subscriptions: [userInterface] | null;
+  subscriptionVideos: [videoInterface] | null;
 }
 
 const initialState: initialStateInterface = {
-  subscriptions: [],
-  subscriptionVideos: [],
+  subscriptions: null,
+  subscriptionVideos: null,
 };
 
 const SubscriptionSlice = createSlice({

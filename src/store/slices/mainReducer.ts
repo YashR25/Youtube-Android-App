@@ -4,13 +4,15 @@ import {setLoading, showToast} from './appConfigSlice';
 import {videoInterface} from '../../interfaces/video';
 import axios from 'axios';
 import {BACKEND_URL} from '@env';
+import {toggleSubscription} from './videoPlaybackSlice';
 
 export const getAllVideos = createAsyncThunk(
-  '/video/',
+  '/home/video/',
   async (body, thunkApi) => {
     try {
       thunkApi.dispatch(setLoading(true));
       const res = await axiosClient.get('/api/v1/video/');
+      console.log(res.data.data.docs);
       return res.data.data.docs;
     } catch (error) {
       thunkApi.dispatch(
@@ -34,7 +36,7 @@ export interface publishVideoProps {
 }
 
 export const publishVideo = createAsyncThunk(
-  '/video/',
+  '/home/post/video/',
   async (body: publishVideoProps, thunkApi) => {
     try {
       const res = await axiosClient.post('/api/v1/video/', {
@@ -48,12 +50,12 @@ export const publishVideo = createAsyncThunk(
 );
 
 interface initialStateInterface {
-  videos: [videoInterface] | [];
+  videos: videoInterface[] | null;
   currentVideo: videoInterface | null;
 }
 
 const initialState: initialStateInterface = {
-  videos: [],
+  videos: null,
   currentVideo: null,
 };
 

@@ -28,8 +28,8 @@ export default function CommentForm({videoId}: CommentFormProps) {
         value={comment}
         onChangeText={setComment}
       />
-      <Pressable onPress={submitHandler}>
-        <CustomIcon name="send-o" size={20} color="white" />
+      <Pressable onPress={submitHandler} style={styles.btn}>
+        <CustomIcon name="send-o" size={20} color={colors.background} />
       </Pressable>
     </View>
   );
@@ -38,9 +38,14 @@ export default function CommentForm({videoId}: CommentFormProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderTopColor: colors.gray,
     borderTopWidth: 1,
+    position: 'absolute',
+    bottom: 0,
+    gap: 10,
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -54,5 +59,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.text,
   },
 });

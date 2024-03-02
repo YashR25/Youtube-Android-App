@@ -1,9 +1,10 @@
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import React, {PropsWithChildren} from 'react';
 import {videoInterface} from '../../interfaces/video';
+import {formatDuration} from '../../utils/utils';
 
 type MiniVideoItemProps = PropsWithChildren<{
-  video: videoInterface | null;
+  video: videoInterface;
   onPress: () => void;
 }>;
 
@@ -13,12 +14,14 @@ export default function MiniVideoItem({video, onPress}: MiniVideoItemProps) {
       <View style={styles.imageWrapper}>
         <Image
           source={{
-            uri: video?.thumbnail.url,
+            uri: video?.thumbnail?.url,
           }}
           style={styles.image}
         />
         <View style={styles.timeStamp}>
-          <Text style={styles.timeText}>{video?.duration}</Text>
+          <Text style={styles.timeText}>
+            {formatDuration(parseFloat(video.duration))}
+          </Text>
         </View>
       </View>
       <Text numberOfLines={1} style={styles.text}>

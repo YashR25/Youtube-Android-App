@@ -3,13 +3,27 @@ import React, {PropsWithChildren} from 'react';
 import SubscribeButton from './SubscribeButton';
 import {userInterface} from '../../interfaces/user';
 import {colors} from '../../utils/theme';
+import {useDispatch} from 'react-redux';
+import {AppDispatch} from '../../store/store';
+import {toggleSubscription} from '../../store/slices/videoPlaybackSlice';
 
 type ChannelItemProps = PropsWithChildren<{
   channel: userInterface | undefined;
   isSubscribed: boolean;
+  visible: boolean;
 }>;
 
-export default function ChannelItem({channel, isSubscribed}: ChannelItemProps) {
+export default function ChannelItem({
+  channel,
+  isSubscribed,
+  visible,
+}: ChannelItemProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const subscriptionHandler = () => {
+    if (channel) {
+      dispatch(toggleSubscription(channel._id));
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.channelInfo}>
@@ -23,11 +37,13 @@ export default function ChannelItem({channel, isSubscribed}: ChannelItemProps) {
         </View>
         <Text style={styles.channelTitle}>{channel?.username}</Text>
       </View>
-      <SubscribeButton
-        title={isSubscribed ? 'Subscribed' : 'Subscribe'}
-        onPress={() => {}}
-        isSubscribed={isSubscribed}
-      />
+      {visible && (
+        <SubscribeButton
+          title={isSubscribed ? 'Subscribed' : 'Subscribe'}
+          onPress={subscriptionHandler}
+          isSubscribed={isSubscribed}
+        />
+      )}
     </View>
   );
 }

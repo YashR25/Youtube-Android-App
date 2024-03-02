@@ -8,12 +8,11 @@ interface paramsInterface {
 }
 
 export const searchVideos = createAsyncThunk(
-  '/api/v1/video/',
+  '/search/video/',
   async (body: paramsInterface, thunkAPi) => {
     try {
       thunkAPi.dispatch(setLoading(true));
       const res = await axiosClient.get(`/api/v1/video?query=${body.query}`);
-      console.log(res.data.data.docs);
       return res.data.data.docs;
     } catch (error) {
       thunkAPi.dispatch(
@@ -30,17 +29,21 @@ export const searchVideos = createAsyncThunk(
 );
 
 interface initialStateInterface {
-  resultVideos: [videoInterface] | [];
+  resultVideos: [videoInterface] | null;
 }
 
 const initialState: initialStateInterface = {
-  resultVideos: [],
+  resultVideos: null,
 };
 
 const SearchSlice = createSlice({
   name: 'SearchReducer',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    setResultVideos: (state, action) => {
+      state.resultVideos = null;
+    },
+  },
   extraReducers: builder => {
     builder.addCase(searchVideos.fulfilled, (state, action) => {
       state.resultVideos = action.payload;
@@ -49,3 +52,4 @@ const SearchSlice = createSlice({
 });
 
 export default SearchSlice.reducer;
+export const {setResultVideos} = SearchSlice.actions;

@@ -8,13 +8,19 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {PropsWithChildren, useEffect, useState} from 'react';
+import React, {
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../store/store';
 import {getChannelVideos} from '../../store/slices/channelSlice';
 import {videoInterface} from '../../interfaces/video';
 import {togglePublishStatus} from '../../store/slices/channelSlice';
 import {colors} from '../../utils/theme';
+import PendingUploadItem from '../video/PendingUploadItem';
 
 type RenderItemProps = PropsWithChildren<{
   video: videoInterface;
@@ -31,16 +37,21 @@ const RenderItem = ({video}: RenderItemProps) => {
       <Switch
         thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
         onValueChange={toggleSwitch}
-        trackColor={{false: '#767577', true: '#81b0ff'}}
+        trackColor={{false: colors.gray, true: colors.primary}}
         value={video.isPublished}
       />
       <View style={styles.imageWrapper}>
         <Image style={styles.image} source={{uri: video.thumbnail.url}} />
       </View>
       <View style={styles.videoInfo}>
-        <Text style={[styles.title, styles.text]}>{video.title}</Text>
+        <Text
+          style={[styles.title, styles.text]}
+          ellipsizeMode="tail"
+          numberOfLines={1}>
+          {video.title}
+        </Text>
         <Text style={styles.text}>{video.views} Views</Text>
-        <Text style={styles.text} numberOfLines={1}>
+        <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
           {video.description}
         </Text>
       </View>
@@ -51,9 +62,24 @@ const RenderItem = ({video}: RenderItemProps) => {
 export default function TopTabVideos() {
   const dispatch = useDispatch<AppDispatch>();
   const videos = useSelector((state: RootState) => state.channelReducer.videos);
+  const pendingUpload = useSelector(
+    (state: RootState) => state.channelReducer.pendingUploads,
+  );
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   useEffect(() => {
     dispatch(getChannelVideos());
   }, []);
+
+  const handleRefresh = () => {
+    try {
+      setRefreshing(true);
+      dispatch(getChannelVideos());
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (!videos) {
     return (
@@ -69,7 +95,18 @@ export default function TopTabVideos() {
 
   return (
     <View style={styles.container}>
+      {pendingUpload && (
+        <View style={{marginBottom: 8}}>
+          <Text
+            style={{color: colors.gray, fontWeight: 'bold', marginVertical: 8}}>
+            Uploading...
+          </Text>
+          <PendingUploadItem item={pendingUpload} />
+        </View>
+      )}
       <FlatList
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
         data={videos}
         renderItem={({item, index}) => <RenderItem video={item} />}
       />
@@ -85,9 +122,11 @@ const styles = StyleSheet.create({
   },
   renderItemContainer: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 10,
     alignItems: 'center',
     marginVertical: 8,
+    paddingHorizontal: 8,
+    overflow: 'hidden',
   },
   imageWrapper: {
     overflow: 'hidden',

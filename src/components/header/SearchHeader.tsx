@@ -27,22 +27,26 @@ export default function SearchHeader({
 }: SearchHeaderProps) {
   return (
     <View style={styles.container}>
-      <Pressable onPress={onBack}>
+      <Pressable onPress={onBack} style={{padding: 8}}>
         <FAIcon name="chevron-left" size={20} color={colors.text} />
       </Pressable>
       <TextInput
+        // value={value}
         style={styles.input}
         placeholder="Search Here..."
         placeholderTextColor={colors.text}
         onChangeText={onTextChange}
-        onKeyPress={(e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-          if (e.nativeEvent.key === 'Enter') {
-            Keyboard.dismiss();
-            onSearch();
-          }
-        }}
+        returnKeyType="search"
+        onSubmitEditing={() => onSearch()}
+        // onKeyPress={(e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+        //   console.log(e.nativeEvent.key);
+        //   if (e.nativeEvent.key === 'Enter') {
+        //     Keyboard.dismiss();
+        //     onSearch();
+        //   }
+        // }}
       />
-      <Pressable onPress={onDescPress}>
+      <Pressable style={{padding: 8}} onPress={onDescPress}>
         <FAIcon name="ellipsis-v" size={20} color={colors.text} />
       </Pressable>
     </View>

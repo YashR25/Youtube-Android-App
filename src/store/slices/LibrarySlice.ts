@@ -2,6 +2,7 @@ import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {videoInterface} from '../../interfaces/video';
 import {setLoading, showToast} from './appConfigSlice';
 import axiosClient from '../../utils/axiosClient';
+import {playlistInterface} from '../../interfaces/user';
 
 export const getWatchHistory = createAsyncThunk(
   '/user/history/',
@@ -46,20 +47,22 @@ export const getLikedVideos = createAsyncThunk(
 );
 
 interface initialStateInterface {
-  watchHistory: [videoInterface] | [];
+  watchHistory: [videoInterface] | null;
   likedVideos:
     | [
         {
           _id: string;
-          video: videoInterface | null;
+          video: videoInterface;
         },
       ]
-    | [];
+    | null;
+  playlists: playlistInterface[] | null;
 }
 
 const initialState: initialStateInterface = {
-  watchHistory: [],
-  likedVideos: [],
+  watchHistory: null,
+  likedVideos: null,
+  playlists: null,
 };
 
 const LibrarySlice = createSlice({
