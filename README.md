@@ -2,8 +2,6 @@
 
 ## Screenshots
 
-### Login
-
 |       **Login**        |      **Home**        |     **Subscription**   |
 |------------------------|----------------------|------------------------|
 |![Screenshot from 2024-03-14 15-41-20](https://github.com/YashR25/Youtube-Android-App/assets/95738812/a29c8a47-57e7-4fb5-b5c1-cc9ac2764744)|![](https://github.com/YashR25/Youtube-Android-App/assets/95738812/2f3072af-4264-456d-8202-702f960bb43f)|![Screenshot from 2024-03-14 15-48-16](https://github.com/YashR25/Youtube-Android-App/assets/95738812/409dad82-2cbe-40f8-b3a5-d71c3ac7b170)
