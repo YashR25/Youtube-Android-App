@@ -20,7 +20,7 @@ export default function MiniVideoItem({video, onPress}: MiniVideoItemProps) {
         />
         <View style={styles.timeStamp}>
           <Text style={styles.timeText}>
-            {formatDuration(parseFloat(video.duration))}
+            {formatDuration(parseFloat(video?.duration))}
           </Text>
         </View>
       </View>

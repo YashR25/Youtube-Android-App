@@ -73,7 +73,7 @@ export const addVideoComment = createAsyncThunk(
       const res = await axiosClient.post(`/api/v1/comment/${body.videoID}`, {
         comment: body.comment,
       });
-      console.log(res.data.data);
+      console.log('comment added res', res.data.data);
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -101,7 +101,7 @@ export const toggleSubscription = createAsyncThunk(
       const res = await axiosClient.get(
         `/api/v1/subscription/toggleSubscription/${body}`,
       );
-      thunkApi.dispatch(getAllVideos());
+      thunkApi.dispatch(getAllVideos({page: 1, limit: 10}));
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -135,13 +135,21 @@ export const updateComment = createAsyncThunk(
   },
 );
 
+export interface CurrentPlayingVideoInterface {
+  isPlaylist: boolean;
+  playlistId: string | null;
+  videoId: string | null;
+}
+
 interface initialStateInterface {
+  currentPlayingVideo: CurrentPlayingVideoInterface | null;
   video: videoInterface | null;
   comments: commentInterface[] | null;
   isLiked: boolean;
 }
 
 const initialState: initialStateInterface = {
+  currentPlayingVideo: null,
   video: null,
   comments: null,
   isLiked: false,
@@ -153,6 +161,9 @@ const VideoPlaybackSlice = createSlice({
   reducers: {
     setCurrentVideo: (state, action) => {
       state.video = action.payload;
+    },
+    setCurrentPlayingVideo: (state, action) => {
+      state.currentPlayingVideo = action.payload;
     },
   },
   extraReducers: builder => {
@@ -204,4 +215,5 @@ const VideoPlaybackSlice = createSlice({
 });
 
 export default VideoPlaybackSlice.reducer;
-export const {setCurrentVideo} = VideoPlaybackSlice.actions;
+export const {setCurrentVideo, setCurrentPlayingVideo} =
+  VideoPlaybackSlice.actions;

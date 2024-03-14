@@ -49,44 +49,42 @@ export default function TweetItem({tweet, isProfile}: TweetItemProps) {
   };
 
   return (
-    <Provider>
-      <View style={styles.container}>
-        {user && (
-          <View style={styles.channelInfo}>
+    <View style={styles.container}>
+      {user && (
+        <View style={styles.channelInfo}>
+          <View style={{flexDirection: 'row', gap: 20, alignItems: 'center'}}>
             <RoundedImage url={user?.avatar} size={50} />
             <View>
               <Text style={[styles.text, styles.title]}>{user.fullName}</Text>
             </View>
           </View>
-        )}
-        <Text style={styles.text}>{tweet?.content}</Text>
-        {!isProfile && (
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 20}}>
-            <Pressable onPress={handelTweetLikeHandler}>
-              <CustomIcon
-                name={tweet?.isLiked ? 'thumbs-up' : 'thumbs-o-up'}
-                size={20}
-                color={colors.text}
-              />
-            </Pressable>
+          {user?._id === tweet?.owner._id && (
             <Menu
               anchor={
-                <Pressable onPress={onOpen}>
-                  <CustomIcon
-                    name="thumbs-o-down"
-                    size={20}
-                    color={colors.text}
-                  />
+                <Pressable onPress={onOpen} style={{padding: 8}}>
+                  <CustomIcon name="ellipsis-v" size={20} color={colors.text} />
                 </Pressable>
               }
               onDismiss={onClose}
               visible={visible}>
               <Menu.Item title="delete" onPress={onDeleteTweetHandler} />
             </Menu>
-          </View>
-        )}
-      </View>
-    </Provider>
+          )}
+        </View>
+      )}
+      <Text style={styles.text}>{tweet?.content}</Text>
+      {!isProfile && (
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 20}}>
+          <Pressable onPress={handelTweetLikeHandler}>
+            <CustomIcon
+              name={tweet?.isLiked ? 'thumbs-up' : 'thumbs-o-up'}
+              size={20}
+              color={colors.text}
+            />
+          </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -100,7 +98,7 @@ const styles = StyleSheet.create({
   channelInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    justifyContent: 'space-between',
   },
   text: {
     color: colors.text,

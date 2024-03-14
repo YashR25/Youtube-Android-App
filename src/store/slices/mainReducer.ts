@@ -8,12 +8,19 @@ import {toggleSubscription} from './videoPlaybackSlice';
 
 export const getAllVideos = createAsyncThunk(
   '/home/video/',
-  async (body, thunkApi) => {
+  async (body: {page: number; limit: number}, thunkApi) => {
+    console.log(body.page, body.limit);
     try {
       thunkApi.dispatch(setLoading(true));
-      const res = await axiosClient.get('/api/v1/video/');
-      console.log(res.data.data.docs);
-      return res.data.data.docs;
+      const res = await axiosClient.get(
+        `/api/v1/video?page=${body.page}&limit=${body.limit}`,
+      );
+      console.log(res.data.data);
+      return {
+        page: body.page,
+        data: res.data.data.docs,
+        hasNextPage: res.data.data.hasNextPage,
+      };
     } catch (error) {
       thunkApi.dispatch(
         showToast({
@@ -52,11 +59,13 @@ export const publishVideo = createAsyncThunk(
 interface initialStateInterface {
   videos: videoInterface[] | null;
   currentVideo: videoInterface | null;
+  hasNextPage: boolean;
 }
 
 const initialState: initialStateInterface = {
   videos: null,
   currentVideo: null,
+  hasNextPage: false,
 };
 
 const VideoSlice = createSlice({
@@ -65,8 +74,17 @@ const VideoSlice = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder.addCase(getAllVideos.fulfilled, (state, action) => {
-      state.videos = action.payload;
-      null;
+      state.hasNextPage = action.payload.hasNextPage;
+      if (action.payload.page === 1) {
+        state.videos = action.payload.data;
+        return;
+      }
+      const oldData = state.videos;
+      const newData = action.payload.data;
+
+      if (oldData && newData) {
+        state.videos = oldData.concat(newData);
+      }
     });
   },
 });

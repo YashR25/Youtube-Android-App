@@ -16,6 +16,8 @@ import CustomBottomSheet from '../CustomBottomSheet/CustomBottomSheet';
 import AllPlaylist from '../playlist/AllPlaylist';
 import {addVideoToPlaylist} from '../../store/slices/PlaylistSlice';
 import PlaylistBottomSeet from '../playlist/PlaylistBottomSeet';
+import {setShouldShowPlayer} from '../../store/slices/appConfigSlice';
+import {setCurrentPlayingVideo} from '../../store/slices/videoPlaybackSlice';
 
 type VideoListProps = PropsWithChildren<{
   data: videoInterface[] | [];
@@ -25,6 +27,8 @@ type VideoListProps = PropsWithChildren<{
   headerComponent: () => React.JSX.Element;
   listEmptyComponent: () => React.JSX.Element;
   shouldShowSubscriberButton: boolean;
+  onEndReach: () => void;
+  footerComponent: () => React.JSX.Element;
 }>;
 
 export default function VideoList({
@@ -35,6 +39,8 @@ export default function VideoList({
   headerComponent,
   listEmptyComponent,
   shouldShowSubscriberButton,
+  onEndReach,
+  footerComponent,
 }: VideoListProps) {
   const navigation = useNavigation<BottomTabNavigationProp<RootParamList>>();
   const [currentSeletedVideo, setCurrentSeletedVideo] = useState('');
@@ -43,6 +49,7 @@ export default function VideoList({
     bottomSheetRef.current?.present();
   };
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const dispatch = useDispatch<AppDispatch>();
   return (
     <>
       <PlaylistBottomSeet
@@ -55,13 +62,36 @@ export default function VideoList({
           data={data}
           ListHeaderComponent={headerComponent}
           ListEmptyComponent={listEmptyComponent}
+          onEndReached={() => {
+            console.log('called end');
+            onEndReach();
+          }}
+          ListFooterComponent={footerComponent}
+          onEndReachedThreshold={0.1}
           renderItem={({item, index}) => (
             <VideoItem
+              onChannelPress={() =>
+                navigation.navigate('Profile', {
+                  shouldUpload: false,
+                  userId: item.owner._id,
+                })
+              }
               key={item._id}
               video={item}
               shouldShowSubscriberButton={shouldShowSubscriberButton}
               onPress={() => {
-                navigation.navigate('VideoPlayback', {videoId: item._id});
+                // navigation.navigate('VideoPlayerScreen', {
+                //   videoId: item._id,
+                //   playlistId: null,
+                // });
+                dispatch(
+                  setCurrentPlayingVideo({
+                    isPlaylist: false,
+                    playlistId: null,
+                    videoId: item._id,
+                  }),
+                );
+                dispatch(setShouldShowPlayer(true));
               }}
               onMenuItemPressed={() => open(item._id)}
             />

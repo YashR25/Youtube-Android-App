@@ -8,25 +8,27 @@ import {colors} from '../../utils/theme';
 
 type TopTabTweetsProps = PropsWithChildren<{
   isProfile: boolean;
+  userId: string;
 }>;
 
-export default function TopTabTweets({isProfile}: TopTabTweetsProps) {
+export default function TopTabTweets({isProfile, userId}: TopTabTweetsProps) {
   const user = useSelector((state: RootState) => state.appConfigReducer.user);
-  const tweets = useSelector((state: RootState) => state.channelReducer.tweets);
+  const tweets = useSelector((state: RootState) => state.tweetReducer.tweets);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const dispatch = useDispatch<AppDispatch>();
+
   useEffect(() => {
     if (user) {
-      dispatch(getChannelTweets(user?._id));
+      dispatch(getChannelTweets(userId));
     }
-  }, []);
+  }, [userId]);
 
   const handleRefresh = () => {
     try {
       setRefreshing(true);
       if (user) {
-        dispatch(getChannelTweets(user?._id));
+        dispatch(getChannelTweets(userId));
       }
     } catch (error) {
       console.log(error);
@@ -41,7 +43,7 @@ export default function TopTabTweets({isProfile}: TopTabTweetsProps) {
         onRefresh={handleRefresh}
         data={tweets}
         renderItem={({item, index}) => (
-          <TweetItem tweet={item} isProfile={isProfile} />
+          <TweetItem key={item._id} tweet={item} isProfile={isProfile} />
         )}
       />
     </View>

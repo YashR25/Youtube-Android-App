@@ -2,6 +2,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import React, {PropsWithChildren} from 'react';
 import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
 import {BottomSheetModal} from '@gorhom/bottom-sheet';
+import {colors} from '../../utils/theme';
 
 type CustomBottomSheetProps = PropsWithChildren<{
   snapPoints: string[];
@@ -12,8 +13,11 @@ export default React.forwardRef(
   ({snapPoints, children}: CustomBottomSheetProps, ref) => {
     return (
       <BottomSheetModal
+        backgroundStyle={{backgroundColor: colors.background}}
         ref={ref as React.RefObject<BottomSheetModalMethods>}
-        snapPoints={snapPoints}>
+        handleIndicatorStyle={{backgroundColor: colors.text}}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}>
         {children}
       </BottomSheetModal>
     );

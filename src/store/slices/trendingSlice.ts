@@ -5,13 +5,14 @@ import axiosClient from '../../utils/axiosClient';
 
 export const getTrendingVideos = createAsyncThunk(
   '/trending/video/',
-  async (body, thunkApi) => {
+  async (body: {page: number; limit: number}, thunkApi) => {
     try {
       thunkApi.dispatch(setLoading(true));
       const res = await axiosClient.get(
-        `/api/v1/video?sortBy=views&sortType=desc`,
+        `/api/v1/video?sortBy=views&sortType=desc&page=${body.page}&limit=${body.limit}`,
       );
-      return res.data.data.docs;
+      console.log('getTrendingVideos', res.data.data);
+      return res.data.data;
     } catch (error) {
       thunkApi.dispatch(
         showToast({
@@ -26,11 +27,13 @@ export const getTrendingVideos = createAsyncThunk(
 );
 
 interface InitialStateInterface {
-  trendingData: [videoInterface] | [];
+  trendingData: videoInterface[] | null;
+  hasNextPage: boolean;
 }
 
 const initialState: InitialStateInterface = {
-  trendingData: [],
+  trendingData: null,
+  hasNextPage: false,
 };
 
 const TrendingSlice = createSlice({
@@ -39,7 +42,13 @@ const TrendingSlice = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder.addCase(getTrendingVideos.fulfilled, (state, action) => {
-      state.trendingData = action.payload;
+      state.hasNextPage = action.payload.hasNextPage;
+      if (state.trendingData && state.trendingData.length > 0) {
+        console.log(action.payload.docs.length);
+        state.trendingData = [...state.trendingData, ...action.payload.docs];
+        return;
+      }
+      state.trendingData = action.payload.docs;
     });
   },
 });

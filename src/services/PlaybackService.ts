@@ -42,10 +42,10 @@ export async function setupPlayer() {
 }
 
 export async function addTrack(video: videoInterface) {
-  const currentTrack = await TrackPlayer.getActiveTrack();
-  if (currentTrack) {
-    await TrackPlayer.remove([0]);
-  }
+  // const currentTrack = await TrackPlayer.getActiveTrack();
+  // if (currentTrack) {
+  //   await TrackPlayer.remove([0]);
+  // }
 
   await TrackPlayer.add({
     id: video._id,
@@ -56,6 +56,28 @@ export async function addTrack(video: videoInterface) {
     duration: parseFloat(video.duration),
   });
   // await TrackPlayer.setRepeatMode(RepeatMode.Queue);
+}
+
+export async function altAddTrack(videos: videoInterface[]) {
+  // const currentTrack = await TrackPlayer.getActiveTrack();
+  // if (currentTrack) {
+  //   await TrackPlayer.remove([0]);
+  // }
+
+  const videoData = videos.map(video => {
+    return {
+      id: video._id,
+      title: video.title,
+      artist: video.owner.username,
+      artwork: video.thumbnail.url,
+      url: video.videoFile.url,
+      duration: parseFloat(video.duration),
+    };
+  });
+
+  await TrackPlayer.add(videoData);
+
+  await TrackPlayer.setRepeatMode(RepeatMode.Queue);
 }
 
 export async function playbackService() {

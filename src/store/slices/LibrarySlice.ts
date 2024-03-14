@@ -56,13 +56,11 @@ interface initialStateInterface {
         },
       ]
     | null;
-  playlists: playlistInterface[] | null;
 }
 
 const initialState: initialStateInterface = {
   watchHistory: null,
   likedVideos: null,
-  playlists: null,
 };
 
 const LibrarySlice = createSlice({

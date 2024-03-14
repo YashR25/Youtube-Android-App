@@ -6,18 +6,22 @@ import {colors} from '../utils/theme';
 type SubscriberItemProps = PropsWithChildren<{
   isSelected: boolean;
   onPress: () => void;
+  url: string;
+  title: string;
 }>;
 
 export default function SubscriberItem({
   isSelected,
   onPress,
+  url,
+  title,
 }: SubscriberItemProps) {
   return (
     <Pressable
       style={[styles.container, isSelected && {backgroundColor: colors.gray}]}
       onPress={onPress}>
-      <Profile onPress={() => {}} />
-      <Text style={styles.text}>Lorem</Text>
+      <Profile onPress={onPress} size={50} url={url} />
+      <Text style={styles.text}>{title}</Text>
     </Pressable>
   );
 }
@@ -28,7 +32,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   text: {
-    color: '#000000',
+    color: colors.text,
     fontWeight: 'bold',
     marginVertical: 8,
   },

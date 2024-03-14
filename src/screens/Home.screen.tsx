@@ -1,5 +1,5 @@
-import {StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import VideoItem from '../components/video/VideoItem';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {RootParamList} from '../App';
@@ -17,22 +17,42 @@ type HomeProps = BottomTabScreenProps<RootParamList, 'Home'>;
 
 export default function Home({navigation, route}: HomeProps) {
   const videos = useSelector((state: RootState) => state.mainReducer.videos);
+  const hasNextPage = useSelector(
+    (state: RootState) => state.mainReducer.hasNextPage,
+  );
   const dispatch = useDispatch<AppDispatch>();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(2);
+  const [loading, setLoading] = useState(false);
 
   const open = () => {
     bottomSheetRef.current?.present();
   };
+
+  const getData = () => {
+    try {
+      setLoading(true);
+      dispatch(getAllVideos({page: page, limit: limit}));
+      setPage(prev => prev + 1);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     //can handle onfocus usng navigation.addlistener
-    dispatch(getAllVideos());
+    getData();
   }, []);
 
   const handleRefresh = () => {
     try {
       setRefreshing(true);
-      dispatch(getAllVideos());
+      dispatch(getAllVideos({page: 1, limit: 2}));
+      setPage(1);
     } catch (error) {
       console.log(error);
     } finally {
@@ -61,6 +81,20 @@ export default function Home({navigation, route}: HomeProps) {
             No videos found
           </Text>
         )}
+        onEndReach={() => {
+          if (hasNextPage) getData();
+        }}
+        footerComponent={() => {
+          return (
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              {loading && <ActivityIndicator size={50} color={colors.text} />}
+            </View>
+          );
+        }}
         headerComponent={() => <></>}
         data={videos}
         horizontal={false}

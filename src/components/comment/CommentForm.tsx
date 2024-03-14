@@ -19,6 +19,7 @@ export default function CommentForm({videoId}: CommentFormProps) {
       return;
     }
     dispatch(addVideoComment({videoID: videoId, comment: comment}));
+    setComment('');
   };
   const [comment, setComment] = useState<string>('');
   return (
@@ -27,6 +28,7 @@ export default function CommentForm({videoId}: CommentFormProps) {
         style={styles.input}
         value={comment}
         onChangeText={setComment}
+        placeholder="Type comment here.."
       />
       <Pressable onPress={submitHandler} style={styles.btn}>
         <CustomIcon name="send-o" size={20} color={colors.background} />

@@ -1,4 +1,4 @@
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import React, {PropsWithChildren} from 'react';
 import SubscribeButton from './SubscribeButton';
 import {userInterface} from '../../interfaces/user';
@@ -11,12 +11,14 @@ type ChannelItemProps = PropsWithChildren<{
   channel: userInterface | undefined;
   isSubscribed: boolean;
   visible: boolean;
+  onPress: () => void;
 }>;
 
 export default function ChannelItem({
   channel,
   isSubscribed,
   visible,
+  onPress,
 }: ChannelItemProps) {
   const dispatch = useDispatch<AppDispatch>();
   const subscriptionHandler = () => {
@@ -25,7 +27,7 @@ export default function ChannelItem({
     }
   };
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={onPress}>
       <View style={styles.channelInfo}>
         <View style={styles.imageWrapper}>
           <Image
@@ -44,7 +46,7 @@ export default function ChannelItem({
           isSubscribed={isSubscribed}
         />
       )}
-    </View>
+    </Pressable>
   );
 }
 

@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   Pressable,
   ImageBackground,
+  Image,
 } from 'react-native';
 import * as yup from 'yup';
 import {colors} from '../../utils/theme';
@@ -83,6 +84,15 @@ const AuthForm: React.FC<AuthFormProps> = ({isLogin, onSwitchForm}) => {
       style={styles.bg}
       source={require('../../assets/background.jpg')}>
       <View style={styles.container}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{
+            width: 200,
+            height: 100,
+            objectFit: 'cover',
+            marginBottom: 8,
+          }}
+        />
         {!isLogin && (
           <View style={styles.inputContainer}>
             <Controller

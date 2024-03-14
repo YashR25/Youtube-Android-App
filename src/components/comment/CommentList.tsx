@@ -4,7 +4,7 @@ import {commentInterface} from '../../interfaces/user';
 import CommentItem from './CommentItem';
 
 type CommentListProps = PropsWithChildren<{
-  comments: [commentInterface] | [];
+  comments: commentInterface[] | [];
 }>;
 
 export default function CommentList({comments}: CommentListProps) {

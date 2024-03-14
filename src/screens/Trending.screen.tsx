@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../store/store';
 import {getTrendingVideos} from '../store/slices/trendingSlice';
@@ -9,6 +9,8 @@ import {colors} from '../utils/theme';
 import VideoListSkeleton from '../components/skeleton/VideoListSkeleton';
 import {RootParamList} from '../App';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import FooterLoadingComponent from '../components/FooterLoadingComponent';
+import {load} from 'react-native-track-player/lib/trackPlayer';
 
 type TrendingScreenProps = BottomTabScreenProps<RootParamList, 'Trending'>;
 
@@ -30,19 +32,40 @@ export default function Trending({navigation}: TrendingScreenProps) {
   const trendingVideos = useSelector(
     (state: RootState) => state.trendingReducer.trendingData,
   );
+  const hasNextPage = useSelector(
+    (state: RootState) => state.trendingReducer.hasNextPage,
+  );
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(2);
+  const [loading, setLoading] = useState(false);
+
+  const getData = () => {
+    console.log('called');
+    setLoading(true);
+    dispatch(getTrendingVideos({page: page, limit: limit}));
+    setPage(prev => prev + 1);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    dispatch(getTrendingVideos());
-  }, [navigation]);
+    getData();
+  }, []);
 
   const handleRefresh = () => {
-    dispatch(getTrendingVideos());
+    dispatch(getTrendingVideos({page: 1, limit: 2}));
   };
+
+  console.log(trendingVideos?.length);
 
   let videoList = <VideoListSkeleton size={5} horizontal={false} />;
 
   if (trendingVideos) {
     videoList = (
       <VideoList
+        footerComponent={() => (loading ? <FooterLoadingComponent /> : <></>)}
+        onEndReach={() => {
+          if (hasNextPage) getData();
+        }}
         listEmptyComponent={() => (
           <Text
             style={{

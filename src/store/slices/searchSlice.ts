@@ -5,6 +5,8 @@ import axiosClient from '../../utils/axiosClient';
 
 interface paramsInterface {
   query: string;
+  page: number;
+  limit: number;
 }
 
 export const searchVideos = createAsyncThunk(
@@ -12,8 +14,10 @@ export const searchVideos = createAsyncThunk(
   async (body: paramsInterface, thunkAPi) => {
     try {
       thunkAPi.dispatch(setLoading(true));
-      const res = await axiosClient.get(`/api/v1/video?query=${body.query}`);
-      return res.data.data.docs;
+      const res = await axiosClient.get(
+        `/api/v1/video?query=${body.query}&page=${body.page}&limit=${body.limit}`,
+      );
+      return res.data.data;
     } catch (error) {
       thunkAPi.dispatch(
         showToast({
@@ -29,11 +33,13 @@ export const searchVideos = createAsyncThunk(
 );
 
 interface initialStateInterface {
-  resultVideos: [videoInterface] | null;
+  resultVideos: videoInterface[] | null;
+  hasNextPage: boolean;
 }
 
 const initialState: initialStateInterface = {
   resultVideos: null,
+  hasNextPage: false,
 };
 
 const SearchSlice = createSlice({
@@ -46,7 +52,17 @@ const SearchSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addCase(searchVideos.fulfilled, (state, action) => {
-      state.resultVideos = action.payload;
+      state.hasNextPage = action.payload.hasNextPage;
+      if (action.payload.page === 1) {
+        state.resultVideos = action.payload.docs;
+        return;
+      }
+      const oldData = state.resultVideos;
+      const newData = action.payload.docs;
+
+      if (oldData && newData) {
+        state.resultVideos = oldData.concat(newData);
+      }
     });
   },
 });

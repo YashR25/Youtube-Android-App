@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -12,74 +13,150 @@ import React, {
   PropsWithChildren,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../store/store';
-import {getChannelVideos} from '../../store/slices/channelSlice';
+import {deleteVideo, getChannelVideos} from '../../store/slices/channelSlice';
 import {videoInterface} from '../../interfaces/video';
 import {togglePublishStatus} from '../../store/slices/channelSlice';
 import {colors} from '../../utils/theme';
 import PendingUploadItem from '../video/PendingUploadItem';
+import {Menu} from 'react-native-paper';
+import CustomIcon from '../CustomIcon';
 
 type RenderItemProps = PropsWithChildren<{
   video: videoInterface;
+  isProfile: boolean;
 }>;
 
-const RenderItem = ({video}: RenderItemProps) => {
+const RenderItem = ({video, isProfile}: RenderItemProps) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const toggleSwitch = () => {
     dispatch(togglePublishStatus(video._id));
   };
+  const [visible, setVisible] = useState(false);
+  const open = () => {
+    setVisible(true);
+  };
+  const close = () => {
+    setVisible(false);
+  };
+
   return (
     <Pressable style={styles.renderItemContainer}>
-      <Switch
-        thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-        onValueChange={toggleSwitch}
-        trackColor={{false: colors.gray, true: colors.primary}}
-        value={video.isPublished}
-      />
+      {isProfile && (
+        <Switch
+          thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+          onValueChange={toggleSwitch}
+          trackColor={{false: colors.gray, true: colors.primary}}
+          value={video.isPublished}
+        />
+      )}
       <View style={styles.imageWrapper}>
-        <Image style={styles.image} source={{uri: video.thumbnail.url}} />
+        <Image style={styles.image} source={{uri: video?.thumbnail?.url}} />
       </View>
       <View style={styles.videoInfo}>
-        <Text
-          style={[styles.title, styles.text]}
-          ellipsizeMode="tail"
-          numberOfLines={1}>
-          {video.title}
-        </Text>
-        <Text style={styles.text}>{video.views} Views</Text>
-        <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
-          {video.description}
-        </Text>
+        <View style={{flex: 1}}>
+          <Text
+            style={[styles.title, styles.text]}
+            ellipsizeMode="tail"
+            numberOfLines={1}>
+            {video.title}
+          </Text>
+          <Text style={styles.text}>{video.views} Views</Text>
+          <Text style={[styles.text]} numberOfLines={1} ellipsizeMode="tail">
+            {video.description}
+          </Text>
+        </View>
+        {isProfile && (
+          <Menu
+            anchor={
+              <Pressable onPress={open} style={{padding: 8}}>
+                <CustomIcon name="ellipsis-v" size={20} color={colors.text} />
+              </Pressable>
+            }
+            visible={visible}
+            onDismiss={close}>
+            <Menu.Item
+              title="delete"
+              onPress={() => {
+                Alert.alert(
+                  'delete video',
+                  'are you sure you want to delete video!!',
+                  [
+                    {
+                      text: 'delete',
+                      onPress: () => {
+                        setVisible(false);
+                        dispatch(deleteVideo(video._id));
+                      },
+                    },
+                    {
+                      text: 'cancel',
+                      onPress: () => {},
+                    },
+                  ],
+                );
+              }}
+            />
+          </Menu>
+        )}
       </View>
     </Pressable>
   );
 };
 
-export default function TopTabVideos() {
+type TopTabVideosProps = PropsWithChildren<{
+  userId: string | undefined;
+}>;
+
+export default function TopTabVideos({userId}: TopTabVideosProps) {
   const dispatch = useDispatch<AppDispatch>();
   const videos = useSelector((state: RootState) => state.channelReducer.videos);
   const pendingUpload = useSelector(
     (state: RootState) => state.channelReducer.pendingUploads,
   );
+  const user = useSelector((state: RootState) => state.appConfigReducer.user);
+
+  const isProfile = useMemo(() => {
+    if (user) return user._id === userId;
+  }, [user, userId]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [loading, setLoading] = useState(false);
+
+  console.log('user', userId);
+
+  const getData = () => {
+    setLoading(true);
+    if (userId) {
+      dispatch(getChannelVideos({page: page, limit: limit, userId: userId}));
+      setPage(prev => prev + 1);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    dispatch(getChannelVideos());
-  }, []);
+    getData();
+  }, [userId]);
 
   const handleRefresh = () => {
     try {
       setRefreshing(true);
-      dispatch(getChannelVideos());
+      if (userId)
+        dispatch(getChannelVideos({page: 1, limit: 5, userId: userId}));
     } catch (error) {
       console.log(error);
     } finally {
       setRefreshing(false);
     }
   };
+
+  console.log('top tab', videos.data);
 
   if (!videos) {
     return (
@@ -107,8 +184,15 @@ export default function TopTabVideos() {
       <FlatList
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        data={videos}
-        renderItem={({item, index}) => <RenderItem video={item} />}
+        data={videos.data}
+        onEndReached={() => {
+          if (videos.hasNextPage) {
+            getData();
+          }
+        }}
+        renderItem={({item, index}) => (
+          <RenderItem isProfile={isProfile!!} video={item} />
+        )}
       />
     </View>
   );
@@ -146,5 +230,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
   },
-  videoInfo: {},
+  videoInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });

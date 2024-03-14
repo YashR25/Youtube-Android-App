@@ -20,11 +20,12 @@ interface addVideoToPlaylistBodyProps {
 export const addVideoToPlaylist = createAsyncThunk(
   '/playlist/video',
   async ({playlistId, videoId}: addVideoToPlaylistBodyProps, thunkApi) => {
+    console.log('called addvideotoplaylist');
     try {
       const res = await axiosClient.post(
         `/api/v1/playlist/video/${playlistId}/${videoId}`,
       );
-      console.log(res.data.data);
+      console.log('from add video to playlist', res.data.data);
       return res.data.data;
     } catch (error) {
       return Promise.reject(error);
@@ -88,13 +89,21 @@ export const getPlaylistDetails = createAsyncThunk(
 
 export const createPlaylist = createAsyncThunk(
   '/playlist/create/',
-  async (body: {name: string; description: string}, thunkApi) => {
+  async (
+    body: {name: string; description: string; videoId: string},
+    thunkApi,
+  ) => {
     try {
       const res = await axiosClient.post('/api/v1/playlist/', {
         name: body.name,
         description: body.description,
       });
-      console.log(res.data.data);
+      thunkApi.dispatch(
+        addVideoToPlaylist({
+          videoId: body.videoId,
+          playlistId: res.data.data._id,
+        }),
+      );
       return res.data.data;
     } catch (error) {}
   },
@@ -106,9 +115,7 @@ const PlaylistSlice = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder.addCase(getAllPlaylists.fulfilled, (state, action) => {
-      if (state.playlists) {
-        state.playlists = action.payload;
-      }
+      state.playlists = action.payload;
     });
     builder.addCase(deletePlaylist.fulfilled, (state, action) => {
       if (state.playlists)

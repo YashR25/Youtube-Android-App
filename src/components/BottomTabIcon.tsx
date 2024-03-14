@@ -12,6 +12,12 @@ type IconsProps = PropsWithChildren<{
   title: string;
 }>;
 
+const Icon = new Map();
+Icon.set('Home', 'home');
+Icon.set('Trending', 'linechart');
+Icon.set('Subscription', 'youtube');
+Icon.set('Library', 'folder1');
+
 //bottom tab icons
 export default function BottomTabIcon({
   name,
@@ -23,7 +29,7 @@ export default function BottomTabIcon({
   return (
     <View style={[styles.container, focused && styles.focused]}>
       <ADIcon
-        name={name}
+        name={Icon.get(title)}
         size={size}
         color={focused ? 'red' : color}
         style={styles.icon}
@@ -39,9 +45,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 15,
   },
   focused: {
+    borderRadius: 15,
     backgroundColor: colors.darkGray,
   },
   text: {

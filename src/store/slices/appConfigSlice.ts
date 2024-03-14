@@ -46,12 +46,14 @@ interface initialStateInterface {
         message: string;
       }
     | {};
+  shouldShowPlayer: boolean;
 }
 
 const initialState: initialStateInterface = {
   isLoading: false,
   user: null,
   toastData: {},
+  shouldShowPlayer: false,
 };
 
 const appConfigSlice = createSlice({
@@ -63,6 +65,9 @@ const appConfigSlice = createSlice({
     },
     showToast: (state, action) => {
       state.toastData = action.payload;
+    },
+    setShouldShowPlayer: (state, action) => {
+      state.shouldShowPlayer = action.payload;
     },
   },
   extraReducers: builder => {
@@ -77,4 +82,5 @@ const appConfigSlice = createSlice({
 
 export default appConfigSlice.reducer;
 
-export const {setLoading, showToast} = appConfigSlice.actions;
+export const {setLoading, showToast, setShouldShowPlayer} =
+  appConfigSlice.actions;

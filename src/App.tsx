@@ -19,24 +19,32 @@ import Auth from './screens/auth/Auth.screen';
 import {AuthProvider, useAuth} from './context/AuthContext';
 import {colors} from './utils/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Provider, useDispatch} from 'react-redux';
+import {Provider, useDispatch, useSelector} from 'react-redux';
 import {getCurrentUser} from './store/slices/appConfigSlice';
-import store, {AppDispatch} from './store/store';
+import store, {AppDispatch, RootState} from './store/store';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import PublishVideo from './screens/PublishVideo.screen';
 import {SocketProvider} from './context/SocketContext';
 import PlaylistDetail from './screens/PlaylistDetail.screen';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {Provider as PaperProvider} from 'react-native-paper';
+import {videoInterface} from './interfaces/video';
+import VideoPlayerScreen from './screens/VideoPlayerScreen';
+import CustomBottomtab from './components/CustomBottomTab/CustomBottomtab';
+import BottomPlayer from './components/CustomBottomTab/BottomPlayer';
+import TabWithPlayer from './components/CustomBottomTab/TabWithPlayer';
+import BootSplash from 'react-native-bootsplash';
 
 export type RootParamList = {
-  Home: undefined;
+  HomeStack: undefined;
   Trending: undefined;
   Subscription: undefined;
   Library: undefined;
-  BottomTabNavigation: undefined;
+  Home: undefined;
   Search: undefined;
   Profile: {
     shouldUpload: boolean;
+    userId: string;
   };
   VideoPlayback: {
     videoId: string;
@@ -46,6 +54,10 @@ export type RootParamList = {
   };
   PlaylistDetail: {
     playlistId: string;
+  };
+  VideoPlayerScreen: {
+    videoId: string | null;
+    playlistId: string | null;
   };
 };
 
@@ -62,16 +74,31 @@ function App(): React.JSX.Element {
   const BottomTabNavigation = () => {
     return (
       <BottomTab.Navigator
-        initialRouteName="Home"
-        screenOptions={{
-          title: '',
-          headerShown: false,
-          tabBarStyle: {backgroundColor: colors.background, height: '10%'},
+        initialRouteName="HomeStack"
+        tabBar={props => <TabWithPlayer {...props} />}
+        screenOptions={({navigation}) => {
+          return {
+            header: () => (
+              <Header
+                onProfile={() =>
+                  navigation.navigate('Profile', {
+                    shouldUpload: false,
+                  })
+                }
+                onSearch={() => navigation.navigate('Search')}
+              />
+            ),
+            title: '',
+            // headerShown: false,
+            tabBarStyle: {backgroundColor: colors.background, height: '10%'},
+          };
         }}>
         <BottomTab.Screen
-          name="Home"
-          component={Home}
+          name="HomeStack"
+          component={StackNavigation}
           options={{
+            title: 'Home',
+            headerShown: false,
             tabBarIcon: ({focused}) => (
               <Icons
                 name="home"
@@ -87,6 +114,7 @@ function App(): React.JSX.Element {
           name="Trending"
           component={Trending}
           options={{
+            title: 'Trending',
             tabBarIcon: ({focused}) => (
               <Icons
                 name="linechart"
@@ -102,6 +130,7 @@ function App(): React.JSX.Element {
           name="Subscription"
           component={Subscription}
           options={{
+            title: 'Subscription',
             tabBarIcon: ({focused}) => (
               <Icons
                 name="youtube"
@@ -117,6 +146,7 @@ function App(): React.JSX.Element {
           name="Library"
           component={Library}
           options={{
+            title: 'Library',
             tabBarIcon: ({focused}) => (
               <Icons
                 name="folder1"
@@ -138,10 +168,10 @@ function App(): React.JSX.Element {
       dispatch(getCurrentUser());
     }, [dispatch]);
     return (
-      <Stack.Navigator initialRouteName="BottomTabNavigation">
+      <Stack.Navigator initialRouteName="Home">
         <Stack.Screen
-          name="BottomTabNavigation"
-          component={BottomTabNavigation}
+          name="Home"
+          component={Home}
           options={({navigation}) => {
             return {
               header: () => (
@@ -178,7 +208,19 @@ function App(): React.JSX.Element {
             headerTintColor: colors.text,
           }}
         />
-        <Stack.Screen name="PlaylistDetail" component={PlaylistDetail} />
+        <Stack.Screen
+          name="PlaylistDetail"
+          component={PlaylistDetail}
+          options={{
+            headerStyle: {backgroundColor: colors.background},
+            headerTintColor: colors.text,
+          }}
+        />
+        <Stack.Screen
+          name="VideoPlayerScreen"
+          component={VideoPlayerScreen}
+          options={{headerShown: false}}
+        />
       </Stack.Navigator>
     );
   };
@@ -194,6 +236,7 @@ function App(): React.JSX.Element {
           setAuthToken(fetchedToken);
         }
         setIsLoading(false);
+        BootSplash.hide();
       };
       fetchToken();
     }, []);
@@ -214,7 +257,8 @@ function App(): React.JSX.Element {
 
     return authToken ? (
       <SocketProvider>
-        <StackNavigation />
+        {/* <StackNavigation /> */}
+        <BottomTabNavigation />
       </SocketProvider>
     ) : (
       <Auth />
@@ -223,7 +267,10 @@ function App(): React.JSX.Element {
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <NavigationContainer>
+      <NavigationContainer
+        onReady={() => {
+          // BootSplash.hide();
+        }}>
         <StatusBar
           barStyle={'light-content'}
           backgroundColor={colors.background}
@@ -231,7 +278,10 @@ function App(): React.JSX.Element {
         <Provider store={store}>
           <AuthProvider>
             <BottomSheetModalProvider>
-              <Root />
+              <PaperProvider>
+                {/* <BottomPlayer /> */}
+                <Root />
+              </PaperProvider>
             </BottomSheetModalProvider>
           </AuthProvider>
         </Provider>

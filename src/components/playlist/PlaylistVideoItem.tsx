@@ -42,7 +42,10 @@ export default function PlaylistVideoItem({
         <Menu
           visible={visible}
           anchor={
-            <Pressable onPress={onOpen}>
+            <Pressable
+              onPress={() => {
+                onOpen();
+              }}>
               <CustomIcon name="ellipsis-v" size={20} color={colors.text} />
             </Pressable>
           }
@@ -57,7 +60,9 @@ export default function PlaylistVideoItem({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 10,
+    padding: 8,
   },
   imageWrapper: {
     width: 100,
@@ -78,6 +83,7 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
   videoDetail: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

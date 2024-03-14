@@ -29,17 +29,24 @@ function SearchScreen({navigation, route}: SearchScreenProps) {
   const dispatch = useDispatch<AppDispatch>();
   const {socket} = useSocket();
   const [suggestions, setSuggestions] = useState<[string] | null>(null);
-  const resultVideos: [videoInterface] | null = useSelector(
+  const resultVideos: videoInterface[] | null = useSelector(
     (state: RootState) => state.searchReducer.resultVideos,
+  );
+  const hasNextPage = useSelector(
+    (state: RootState) => state.searchReducer.hasNextPage,
   );
   const [isLoading, setIsLoading] = useState(false);
   const onTextChangeTimeOutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingText, setIsEditingText] = useState<boolean>(false);
-  const onSearchHandler = async (text: string) => {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(2);
+
+  const onSearchHandler = async (text: string, page: number, limit: number) => {
     setIsEditingText(false);
     try {
       setIsLoading(true);
-      dispatch(searchVideos({query: text}));
+      dispatch(searchVideos({query: text, page: page, limit: limit}));
+      setPage(prev => prev + 1);
     } catch (error) {
       console.log(error);
     } finally {
@@ -77,7 +84,7 @@ function SearchScreen({navigation, route}: SearchScreenProps) {
           onBack={() => navigation.popToTop()}
           onDescPress={() => {}}
           onTextChange={onTextChangeHandler}
-          onSearch={() => onSearchHandler(searchText)}
+          onSearch={() => onSearchHandler(searchText, 1, 2)}
         />
       ),
     });
@@ -101,7 +108,7 @@ function SearchScreen({navigation, route}: SearchScreenProps) {
                 style={{padding: 8, flexDirection: 'row'}}
                 onPress={() => {
                   setSearchText(item);
-                  onSearchHandler(item);
+                  onSearchHandler(item, 1, 2);
                 }}>
                 <Text style={{color: colors.text}}>{item}</Text>
               </Pressable>
@@ -114,8 +121,23 @@ function SearchScreen({navigation, route}: SearchScreenProps) {
         !isLoading &&
         !isEditingText && (
           <>
-            <Text style={styles.title}>Search Result For: {searchText}</Text>
-            <VideoList data={resultVideos} horizontal={false} />
+            <VideoList
+              data={resultVideos}
+              horizontal={false}
+              footerComponent={() => <></>}
+              handleRefresh={() => {}}
+              headerComponent={() => (
+                <Text style={styles.title}>
+                  Search Result For: {searchText}
+                </Text>
+              )}
+              listEmptyComponent={() => <></>}
+              onEndReach={() => {
+                if (hasNextPage) onSearchHandler(searchText, page, limit);
+              }}
+              refreshing={false}
+              shouldShowSubscriberButton={false}
+            />
           </>
         )}
     </View>

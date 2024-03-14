@@ -1,4 +1,12 @@
-import {Button, Modal, StyleSheet, Text, TextInput, View} from 'react-native';
+import {
+  Button,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import React, {PropsWithChildren, useRef, useState} from 'react';
 import CustomBottomSheet from '../CustomBottomSheet/CustomBottomSheet';
 import {useDispatch} from 'react-redux';
@@ -10,6 +18,7 @@ import {
 } from '../../store/slices/PlaylistSlice';
 import {BottomSheetModal} from '@gorhom/bottom-sheet';
 import {colors} from '../../utils/theme';
+import {BottomSheetMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
 
 type PlaylistBottomSeetProps = PropsWithChildren<{
   currentSelectedVideo: string;
@@ -30,14 +39,20 @@ export default React.forwardRef(
           transparent
           animationType="fade"
           onRequestClose={() => setIsModalVisible(false)}>
-          <View style={styles.modalContainer}>
+          <Pressable
+            style={styles.modalContainer}
+            onPress={() => {
+              setIsModalVisible(false);
+            }}>
             <View style={styles.modalView}>
               <TextInput
+                placeholder="Type title"
                 value={playlistName}
                 onChangeText={setPlaylistName}
                 style={styles.input}
               />
               <TextInput
+                placeholder="Type description"
                 value={desc}
                 onChangeText={setDesc}
                 style={styles.input}
@@ -45,26 +60,24 @@ export default React.forwardRef(
               <Button
                 title="Create Playlist"
                 onPress={() => {
-                  try {
-                    dispatch(
-                      createPlaylist({name: playlistName, description: desc}),
-                    );
-                  } catch (error) {
-                  } finally {
-                    dispatch(
-                      addVideoToPlaylist({
-                        playlistId: playlistId,
-                        videoId: currentSelectedVideo,
-                      }),
-                    );
-                  }
+                  dispatch(
+                    createPlaylist({
+                      name: playlistName,
+                      description: desc,
+                      videoId: currentSelectedVideo,
+                    }),
+                  );
                 }}
               />
             </View>
-          </View>
+          </Pressable>
         </Modal>
         <CustomBottomSheet ref={ref} snapPoints={['25%', '50%']}>
           <AllPlaylist
+            onNewPlaylistPress={() => {
+              (ref as React.RefObject<BottomSheetMethods>).current?.close();
+              setIsModalVisible(true);
+            }}
             onPress={(playlistId: string) => {
               setPlaylistId(playlistId);
               dispatch(
@@ -86,9 +99,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
     borderRadius: 20,
+    height: 200,
+    width: '80%',
+    justifyContent: 'space-between',
     backgroundColor: colors.darkGray,
     shadowColor: colors.text,
     shadowOffset: {
@@ -98,11 +115,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    padding: 8,
+    padding: 16,
   },
   input: {
-    borderRadius: 20,
-    backgroundColor: colors.background,
+    borderRadius: 10,
+    backgroundColor: colors.gray,
     padding: 8,
   },
 });

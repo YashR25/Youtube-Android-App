@@ -34,10 +34,20 @@ axiosClient.interceptors.response.use(
   },
   async error => {
     // Check if the error is due to access token expiration
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 400) {
       // Perform refresh token logic here (call your refresh token API)
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      const res = await axios.post(
+        `${BACKEND_URL}/api/v1/user/refreshAccessToken`,
+        {refreshToken},
+      );
+
+      if (res.data.statusCode === 404) {
+        return Promise.reject(error);
+      }
+
       // If successful, update the access token in AsyncStorage
-      const newAccessToken = 'your_refreshed_access_token';
+      const newAccessToken = res.data.data.accessToken;
       await AsyncStorage.setItem('accessToken', newAccessToken);
 
       // Retry the original request with the new access token

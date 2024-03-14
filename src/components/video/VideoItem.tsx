@@ -17,6 +17,7 @@ type VideoItemProps = PropsWithChildren<{
   onPress: () => void;
   shouldShowSubscriberButton: boolean;
   onMenuItemPressed: () => void;
+  onChannelPress: () => void;
 }>;
 
 export default function VideoItem({
@@ -24,6 +25,7 @@ export default function VideoItem({
   onPress,
   shouldShowSubscriberButton,
   onMenuItemPressed,
+  onChannelPress,
 }: VideoItemProps) {
   // const {navigation} =
   //   useNavigation<BottomTabScreenProps<RootBottomTabParamList>>();
@@ -37,61 +39,61 @@ export default function VideoItem({
   const closeMenu = () => setIsMenuVisible(false);
 
   const addToPlaylistHandler = () => {
+    setIsMenuVisible(false);
     onMenuItemPressed();
   };
 
   return (
-    <Provider>
-      <Pressable style={styles.container} onPress={onPress}>
-        <View style={styles.imageWrapper}>
-          <Image
-            source={{
-              uri: video.thumbnail.url,
-            }}
-            style={styles.image}
-          />
-        </View>
-        <View style={styles.videoDescContainer}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title} numberOfLines={2}>
-              {video.title}
-            </Text>
-            <View style={styles.menu}>
-              <Menu
-                visible={isMenuVisible}
-                onDismiss={closeMenu}
-                anchor={
-                  <Pressable onPress={openMenu}>
-                    <Icons
-                      name="ellipsis1"
-                      size={20}
-                      color={colors.text}
-                      focused={false}
-                      title=""
-                    />
-                  </Pressable>
-                }>
-                <Menu.Item
-                  onPress={addToPlaylistHandler}
-                  title="Add to Playlist"
-                />
-              </Menu>
-            </View>
-          </View>
-          <View style={styles.videoStats}>
-            <Text style={styles.desc}>{video.views} views</Text>
-            <Text style={styles.desc}>{video.description}</Text>
+    <Pressable style={styles.container} onPress={onPress}>
+      <View style={styles.imageWrapper}>
+        <Image
+          source={{
+            uri: video.thumbnail?.url,
+          }}
+          style={styles.image}
+        />
+      </View>
+      <View style={styles.videoDescContainer}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title} numberOfLines={2}>
+            {video.title}
+          </Text>
+          <View style={styles.menu}>
+            <Menu
+              visible={isMenuVisible}
+              onDismiss={closeMenu}
+              anchor={
+                <Pressable onPress={openMenu}>
+                  <Icons
+                    name="ellipsis1"
+                    size={20}
+                    color={colors.text}
+                    focused={false}
+                    title=""
+                  />
+                </Pressable>
+              }>
+              <Menu.Item
+                onPress={addToPlaylistHandler}
+                title="Add to Playlist"
+              />
+            </Menu>
           </View>
         </View>
-        {shouldShowSubscriberButton && (
-          <ChannelItem
-            channel={video.owner}
-            isSubscribed={video.isSubscribed}
-            visible={user?._id !== video.owner._id}
-          />
-        )}
-      </Pressable>
-    </Provider>
+        <View style={styles.videoStats}>
+          <Text style={styles.desc}>{video.views} views</Text>
+          <Text style={styles.desc}>{video.description}</Text>
+        </View>
+      </View>
+      {shouldShowSubscriberButton && (
+        <ChannelItem
+          onPress={onChannelPress}
+          channel={video.owner}
+          isSubscribed={video.isSubscribed}
+          visible={user?._id !== video.owner?._id}
+        />
+      )}
+    </Pressable>
   );
 }
 

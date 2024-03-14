@@ -36,6 +36,6 @@ export interface playlistInterface {
   _id: string;
   name: string;
   videos: videoInterface[];
-  owner: string;
+  owner: userInterface;
   description: string;
 }

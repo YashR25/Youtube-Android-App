@@ -76,7 +76,7 @@ export default function CustomVideo({video}: CustomVideoProps) {
   useEffect(() => {
     setup();
     return () => {
-      TrackPlayer.remove([0]);
+      TrackPlayer.reset();
     };
   }, [video]);
 
@@ -138,6 +138,7 @@ export default function CustomVideo({video}: CustomVideoProps) {
       switch (event.type) {
         case Event.PlaybackActiveTrackChanged:
           setPlayingTrack(event.track);
+
           // handlePlay();
           break;
         case Event.RemotePlay:
@@ -172,7 +173,7 @@ export default function CustomVideo({video}: CustomVideoProps) {
   }
 
   return (
-    <View style={[styles.videoWrapper, {height: fullScreen ? '100%' : '30%'}]}>
+    <View style={[styles.videoWrapper, {height: '100%'}]}>
       {loading && (
         <View
           style={{

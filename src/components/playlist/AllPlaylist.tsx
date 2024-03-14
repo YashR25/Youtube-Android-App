@@ -1,26 +1,54 @@
-import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
-import React, {PropsWithChildren} from 'react';
-import {useSelector} from 'react-redux';
-import {RootState} from '../../store/store';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import React, {PropsWithChildren, useEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../store/store';
 import {colors} from '../../utils/theme';
 import CustomIcon from '../CustomIcon';
+import {getAllPlaylists} from '../../store/slices/PlaylistSlice';
 
 type AllPlaylistProps = PropsWithChildren<{
   onPress: (playlistId: string) => void;
+  onNewPlaylistPress: () => void;
 }>;
 
-export default function AllPlaylist({onPress}: AllPlaylistProps) {
+export default function AllPlaylist({
+  onPress,
+  onNewPlaylistPress,
+}: AllPlaylistProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.appConfigReducer.user);
   const playlists = useSelector(
-    (state: RootState) => state.LibraryReducer.playlists,
+    (state: RootState) => state.playlistReducer.playlists,
   );
+
+  useEffect(() => {
+    if (user) dispatch(getAllPlaylists(user._id));
+  }, []);
+
+  if (!playlists) {
+    return (
+      <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+        <ActivityIndicator size={50} color={colors.text} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.text}>Save Video To..</Text>
-        <Pressable style={{flexDirection: 'row', gap: 10}}>
+        <Text style={styles.text}>Save video to..</Text>
+        <Pressable
+          onPress={onNewPlaylistPress}
+          style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}>
           <CustomIcon name="plus" size={10} color={colors.primary} />
-          <Text>New Playlist</Text>
+          <Text style={{color: colors.primary}}>New Playlist</Text>
         </Pressable>
       </View>
       <FlatList
@@ -38,6 +66,7 @@ export default function AllPlaylist({onPress}: AllPlaylistProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',

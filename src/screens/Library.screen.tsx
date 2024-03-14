@@ -1,5 +1,12 @@
-import {FlatList, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect} from 'react';
+import {
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
 import ChannelItem from '../components/channel/ChannelItem';
 import MiniVideoItem from '../components/video/MiniVideoItem';
 import {useDispatch, useSelector} from 'react-redux';
@@ -25,18 +32,28 @@ export default function Library({navigation}: LibraryScreenProps) {
   const playlists = useSelector(
     (state: RootState) => state.playlistReducer.playlists,
   );
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    console.log('refresh called');
+    setRefreshing(true);
+    getData();
+    setRefreshing(false);
+  }, []);
 
   console.log('watchHistory', watchHistory);
+  console.log('playlist', playlists);
+
+  const getData = () => {
+    dispatch(getWatchHistory());
+    dispatch(getLikedVideos());
+    if (user) dispatch(getAllPlaylists(user._id));
+  };
 
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      dispatch(getWatchHistory());
-      dispatch(getLikedVideos());
-      if (user) dispatch(getAllPlaylists(user._id));
-    });
-    return unsubscribe;
-  }, [navigation]);
+    getData();
+  }, []);
 
   if (!watchHistory || !likedVideos) {
     return (
@@ -72,60 +89,70 @@ export default function Library({navigation}: LibraryScreenProps) {
     );
   }
 
+  console.log('library', likedVideos);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Watch History</Text>
-      {watchHistory.length > 0 ? (
-        <FlatList
-          pagingEnabled
-          data={watchHistory}
-          renderItem={({item, index}) => (
-            <MiniVideoItem
-              video={item}
-              onPress={() =>
-                navigation.navigate('VideoPlayback', {videoId: item._id})
-              }
-              key={item._id}
-            />
-          )}
-          horizontal
-        />
-      ) : (
-        <EmptyItem text="No watch history yet" />
-      )}
-      <Text style={styles.title}>Liked Videos</Text>
-      {likedVideos.length > 0 ? (
-        <FlatList
-          data={likedVideos}
-          pagingEnabled
-          renderItem={({item, index}) => (
-            <MiniVideoItem
-              video={item.video}
-              onPress={() =>
-                navigation.navigate('VideoPlayback', {videoId: item.video._id})
-              }
-              key={item.video._id}
-            />
-          )}
-          horizontal
-        />
-      ) : (
-        <EmptyItem text="No liked videos yet" />
-      )}
-      <Text style={styles.title}>Playlista</Text>
-      {playlists && playlists?.length > 0 ? (
-        <FlatList
-          data={playlists}
-          renderItem={({item, index}) => (
-            <PlaylistItem key={item._id} item={item} />
-          )}
-          pagingEnabled
-          horizontal
-        />
-      ) : (
-        <EmptyItem text="No Playlist created yet" />
-      )}
-    </View>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
+      <View style={{flex: 1}}>
+        <Text style={styles.title}>Watch History</Text>
+        {watchHistory.length > 0 ? (
+          <FlatList
+            pagingEnabled
+            data={watchHistory}
+            renderItem={({item, index}) => (
+              <MiniVideoItem
+                video={item}
+                onPress={() =>
+                  navigation.navigate('VideoPlayback', {videoId: item._id})
+                }
+                key={item._id}
+              />
+            )}
+            horizontal
+          />
+        ) : (
+          <EmptyItem text="No watch history yet" />
+        )}
+        <Text style={styles.title}>Liked Videos</Text>
+        {likedVideos.length > 0 ? (
+          <FlatList
+            data={likedVideos}
+            pagingEnabled
+            renderItem={({item, index}) => (
+              <MiniVideoItem
+                video={item.video}
+                onPress={() =>
+                  navigation.navigate('VideoPlayback', {
+                    videoId: item.video._id,
+                  })
+                }
+                key={item._id}
+              />
+            )}
+            horizontal
+          />
+        ) : (
+          <EmptyItem text="No liked videos yet" />
+        )}
+        <Text style={styles.title}>Playlists</Text>
+        {playlists && playlists?.length > 0 ? (
+          <FlatList
+            data={playlists}
+            renderItem={({item, index}) => (
+              <PlaylistItem key={item._id} item={item} />
+            )}
+            pagingEnabled
+            horizontal
+          />
+        ) : (
+          <EmptyItem text="No Playlist created yet" />
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
