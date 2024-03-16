@@ -25,6 +25,7 @@ import {colors} from '../../utils/theme';
 import PendingUploadItem from '../video/PendingUploadItem';
 import {Menu} from 'react-native-paper';
 import CustomIcon from '../CustomIcon';
+import FooterLoadingComponent from '../FooterLoadingComponent';
 
 type RenderItemProps = PropsWithChildren<{
   video: videoInterface;
@@ -190,6 +191,7 @@ export default function TopTabVideos({userId}: TopTabVideosProps) {
             getData();
           }
         }}
+        ListFooterComponent={() => loading && <FooterLoadingComponent />}
         renderItem={({item, index}) => (
           <RenderItem isProfile={isProfile!!} video={item} />
         )}

@@ -42,7 +42,7 @@ export default function PlayerWidget() {
   const dispatch = useDispatch<AppDispatch>();
 
   const commentBottomSheetRef = useRef<BottomSheetModal>(null);
-  const commnetSnapPoints = useMemo(() => ['70%'], []);
+  const commnetSnapPoints = useMemo(() => ['68%'], []);
 
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const openMenu = () => {
@@ -176,6 +176,7 @@ export default function PlayerWidget() {
               </View>
             </View>
             <ChannelItem
+              onPress={() => {}}
               channel={video.owner}
               isSubscribed={video.isSubscribed}
               visible={user?._id !== video.owner._id}

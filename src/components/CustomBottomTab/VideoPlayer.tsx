@@ -97,7 +97,8 @@ export default function VideoPlayer({
       if (
         currentPlayingVideo.isPlaylist &&
         !currentPlayingVideo.videoId &&
-        playlist
+        playlist &&
+        !video
       ) {
         const playlistToBeAdded = playlist.videos.map(video => {
           return {

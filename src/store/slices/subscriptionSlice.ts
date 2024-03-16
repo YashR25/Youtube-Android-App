@@ -55,13 +55,13 @@ export const getSubscriptionVideos = createAsyncThunk(
 
 export const getAllSubscriptionVideos = createAsyncThunk(
   '/subscription/getAllVideos',
-  async (body, thunkApi) => {
+  async (body: {page: number; limit: number}, thunkApi) => {
     try {
       const res = await axiosClient.get(
-        '/api/v1/subscription/getAllSubscriptionVideos/',
+        `/api/v1/subscription/getAllSubscriptionVideos?page=${body.page}&limit=${body.limit}`,
       );
-      // console.log('getAllSubscriptionVideos', res.data.data.videos);
-      return res.data.data.videos;
+      console.log('getAllSubscriptionVideos', res.data.data);
+      return res.data.data;
     } catch (error) {
       return Promise.reject(error);
     }
@@ -70,13 +70,13 @@ export const getAllSubscriptionVideos = createAsyncThunk(
 
 interface initialStateInterface {
   subscriptions: [userInterface] | null;
-  subscriptionVideos: videoInterface[] | null;
+  subscriptionVideos: {data: videoInterface[] | null; hasNextPage: boolean};
   hasNextPage: boolean;
 }
 
 const initialState: initialStateInterface = {
   subscriptions: null,
-  subscriptionVideos: null,
+  subscriptionVideos: {data: null, hasNextPage: false},
   hasNextPage: false,
 };
 
@@ -90,27 +90,32 @@ const SubscriptionSlice = createSlice({
     });
     builder.addCase(getSubscriptionVideos.fulfilled, (state, action) => {
       state.hasNextPage = action.payload.hasNextPage;
-      if (action.payload.page === 1) {
-        state.subscriptionVideos = action.payload.docs;
+      if (Number(action.payload.page) === 1) {
+        state.subscriptionVideos.data = action.payload.docs;
         return;
       }
 
-      const oldData = state.subscriptionVideos;
+      const oldData = state.subscriptionVideos.data;
       const newData = action.payload.docs;
 
       if (oldData && newData) {
-        state.subscriptionVideos = oldData.concat(newData);
+        state.subscriptionVideos.data = oldData.concat(newData);
       }
     });
     builder.addCase(getAllSubscriptionVideos.fulfilled, (state, action) => {
-      // if (state.subscriptionVideos && state.subscriptionVideos.length > 0) {
-      //   state.subscriptionVideos = [
-      //     ...state.subscriptionVideos,
-      //     action.payload,
-      //   ];
-      //   return;
-      // }
-      state.subscriptionVideos = action.payload;
+      state.subscriptionVideos.hasNextPage = action.payload.hasNextPage;
+
+      if (Number(action.payload.page) === 1) {
+        state.subscriptionVideos.data = action.payload.docs;
+        return;
+      }
+
+      const oldData = state.subscriptionVideos.data;
+      const newData = action.payload.docs;
+
+      if (oldData && newData) {
+        state.subscriptionVideos.data = oldData.concat(newData);
+      }
     });
   },
 });

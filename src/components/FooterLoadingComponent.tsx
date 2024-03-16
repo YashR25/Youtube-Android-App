@@ -8,13 +8,7 @@ export default function FooterLoadingComponent() {
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
       }}>
-      <Text style={{color: colors.text}}>FooterLoadingComponent</Text>
       <ActivityIndicator color={colors.text} size={50} />
     </View>
   );

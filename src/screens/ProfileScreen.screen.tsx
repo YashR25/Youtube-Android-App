@@ -214,7 +214,13 @@ export default function ProfileScreen({navigation, route}: ProfileScreenProps) {
 
   if (!channelStats) {
     return (
-      <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}>
         <ActivityIndicator size={50} color={colors.text} />
       </View>
     );

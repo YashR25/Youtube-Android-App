@@ -82,7 +82,7 @@ export default React.forwardRef(
         style={[
           styles.videoWrapper,
           // {height: fullScreen ? '100%' : '30%'},
-          {height: '100%', width: '100%', borderColor: 'red', borderWidth: 1},
+          {height: '100%', width: '100%'},
         ]}>
         {loading && (
           <View

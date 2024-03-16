@@ -236,8 +236,6 @@ export default function BottomPlayer({
                     {
                       backgroundColor: colors.text,
                       overflow: 'hidden',
-                      borderColor: 'white',
-                      borderWidth: 1,
                     },
                     // fullScreen
                     //   ? {width: height, height: width}

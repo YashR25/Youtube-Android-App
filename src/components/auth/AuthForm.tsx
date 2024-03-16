@@ -1,5 +1,5 @@
 // AuthForm.tsx
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   useForm,
   Controller,
@@ -58,6 +58,7 @@ const AuthForm: React.FC<AuthFormProps> = ({isLogin, onSwitchForm}) => {
   });
 
   const {setAuthToken} = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -66,8 +67,8 @@ const AuthForm: React.FC<AuthFormProps> = ({isLogin, onSwitchForm}) => {
       console.log(res);
       const accessToken = res.data.accessToken;
       setAuthToken(accessToken);
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      setError(error.message);
     }
 
     // Perform authentication logic here based on isLogin flag
@@ -146,6 +147,8 @@ const AuthForm: React.FC<AuthFormProps> = ({isLogin, onSwitchForm}) => {
           />
           <Text style={styles.errorText}>{errors.password?.message}</Text>
         </View>
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity
           onPress={handleSubmit(onSubmit, onInvalid)}

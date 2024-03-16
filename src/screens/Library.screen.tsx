@@ -33,6 +33,9 @@ export default function Library({navigation}: LibraryScreenProps) {
     (state: RootState) => state.playlistReducer.playlists,
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [likePage, setLikePage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [limit, setLimit] = useState(3);
 
   const onRefresh = useCallback(() => {
     console.log('refresh called');
@@ -44,18 +47,32 @@ export default function Library({navigation}: LibraryScreenProps) {
   console.log('watchHistory', watchHistory);
   console.log('playlist', playlists);
 
-  const getData = () => {
-    dispatch(getWatchHistory());
-    dispatch(getLikedVideos());
-    if (user) dispatch(getAllPlaylists(user._id));
+  const getLikeData = (page: number, limit: number) => {
+    dispatch(getLikedVideos({page: page, limit: limit}));
+    setLikePage(prev => prev + 1);
+  };
+
+  const getWatchHistoryData = (page: number, limit: number) => {
+    dispatch(getWatchHistory({page: page, limit: limit}));
+    setHistoryPage(prev => prev + 1);
+  };
+
+  const getPlaylistData = () => {
+    if (user) dispatch(getAllPlaylists(user?._id));
   };
 
   const dispatch = useDispatch<AppDispatch>();
+
+  const getData = () => {
+    getLikeData(1, 3);
+    getWatchHistoryData(1, 3);
+    getPlaylistData();
+  };
   useEffect(() => {
     getData();
   }, []);
 
-  if (!watchHistory || !likedVideos) {
+  if (!watchHistory.data || !likedVideos.data) {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Watch History</Text>
@@ -99,10 +116,10 @@ export default function Library({navigation}: LibraryScreenProps) {
       }>
       <View style={{flex: 1}}>
         <Text style={styles.title}>Watch History</Text>
-        {watchHistory.length > 0 ? (
+        {watchHistory.data.length > 0 ? (
           <FlatList
             pagingEnabled
-            data={watchHistory}
+            data={watchHistory.data}
             renderItem={({item, index}) => (
               <MiniVideoItem
                 video={item}
@@ -112,15 +129,19 @@ export default function Library({navigation}: LibraryScreenProps) {
                 key={item._id}
               />
             )}
+            onEndReached={() => {
+              if (watchHistory.hasNextPage)
+                getWatchHistoryData(historyPage, limit);
+            }}
             horizontal
           />
         ) : (
           <EmptyItem text="No watch history yet" />
         )}
         <Text style={styles.title}>Liked Videos</Text>
-        {likedVideos.length > 0 ? (
+        {likedVideos.data.length > 0 ? (
           <FlatList
-            data={likedVideos}
+            data={likedVideos.data}
             pagingEnabled
             renderItem={({item, index}) => (
               <MiniVideoItem
@@ -133,6 +154,9 @@ export default function Library({navigation}: LibraryScreenProps) {
                 key={item._id}
               />
             )}
+            onEndReached={() => {
+              if (likedVideos.hasNextPage) getLikeData(likePage, limit);
+            }}
             horizontal
           />
         ) : (

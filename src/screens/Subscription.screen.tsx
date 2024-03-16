@@ -35,7 +35,7 @@ export default function Subscription({navigation}: SubscriptionScreenProps) {
   const subscriptions: [userInterface] | null = useSelector(
     (state: RootState) => state.subsciptionReducer.subscriptions,
   );
-  const subscriptionVideos: videoInterface[] | null = useSelector(
+  const subscriptionVideos = useSelector(
     (state: RootState) => state.subsciptionReducer.subscriptionVideos,
   );
   const hasNextPage = useSelector(
@@ -46,25 +46,24 @@ export default function Subscription({navigation}: SubscriptionScreenProps) {
   const [limit, setLimit] = useState(2);
   const [loading, setLoading] = useState(false);
 
-  const getVideoData = () => {
+  const getVideoData = (page: number, limit: number) => {
     setLoading(true);
     if (selectedId) {
       dispatch(
         getSubscriptionVideos({userId: selectedId, page: page, limit: limit}),
       );
+    } else {
+      dispatch(getAllSubscriptionVideos({page: page, limit: limit}));
     }
-    // else {
-    //   dispatch(getAllSubscriptionVideos());
-    // }
 
-    setPage(prev => prev + 1);
+    setPage(page + 1);
     setLoading(false);
   };
 
   useEffect(() => {
     if (user) {
       dispatch(getSubscriptions(user?._id));
-      dispatch(getAllSubscriptionVideos());
+      getVideoData(1, 2);
     }
   }, [navigation]);
 
@@ -76,24 +75,18 @@ export default function Subscription({navigation}: SubscriptionScreenProps) {
 
   useEffect(() => {
     if (selectedId) {
-      dispatch(getSubscriptionVideos({userId: selectedId, page: 1, limit: 2}));
-    } else {
-      dispatch(getAllSubscriptionVideos());
+      getVideoData(1, 2);
     }
   }, [selectedId]);
 
   const handleRefresh = () => {
     if (user) dispatch(getSubscriptions(user?._id));
-    if (selectedId) {
-      dispatch(getSubscriptionVideos({userId: selectedId, page: 1, limit: 2}));
-    } else {
-      dispatch(getAllSubscriptionVideos());
-    }
+    getVideoData(1, 2);
   };
 
   // console.log('subscriptionVideos', subscriptionVideos);
 
-  if (!subscriptions || !subscriptionVideos) {
+  if (!subscriptions || !subscriptionVideos.data) {
     return (
       <View style={styles.container}>
         <View style={styles.list}>
@@ -108,7 +101,7 @@ export default function Subscription({navigation}: SubscriptionScreenProps) {
     );
   }
 
-  console.log(subscriptionVideos);
+  console.log('subscriptionVideos', subscriptionVideos);
 
   if (subscriptions.length <= 0) {
     return (
@@ -149,17 +142,17 @@ export default function Subscription({navigation}: SubscriptionScreenProps) {
           horizontal
         />
       </View>
-      {subscriptionVideos.length > 0 ? (
+      {subscriptionVideos.data.length > 0 ? (
         <VideoList
           footerComponent={() => (loading ? <FooterLoadingComponent /> : <></>)}
           onEndReach={() => {
             if (hasNextPage) {
-              getVideoData();
+              getVideoData(page, limit);
             }
           }}
           listEmptyComponent={() => <></>}
           headerComponent={() => <></>}
-          data={subscriptionVideos}
+          data={subscriptionVideos.data}
           horizontal={false}
           handleRefresh={handleRefresh}
           refreshing={refreshing}
