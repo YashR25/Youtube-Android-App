@@ -35,6 +35,12 @@ This is a YouTube clone app built using React Native with TypeScript. It provide
 
 Contributions are welcome! Feel free to submit pull requests or open issues for any feature requests or bug fixes.
 
+## Collapsable Video Player 
+
+https://github.com/YashR25/Youtube-Android-App/assets/95738812/6097f959-2da0-4306-8606-7c33c7fb01ef
+
+
+
 ## Screenshots
 
 |       **Login**        |      **Home**        |
