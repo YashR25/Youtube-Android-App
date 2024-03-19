@@ -17,6 +17,7 @@ import VideoList from '../components/video/VideoList';
 import {videoInterface} from '../interfaces/video';
 import {colors} from '../utils/theme';
 import {useSocket} from '../context/SocketContext';
+import CustomIcon from '../components/CustomIcon';
 
 type SearchScreenProps = NativeStackScreenProps<RootParamList, 'Search'>;
 
@@ -105,12 +106,25 @@ function SearchScreen({navigation, route}: SearchScreenProps) {
             return (
               <Pressable
                 android_ripple={{color: colors.gray}}
-                style={{padding: 8, flexDirection: 'row'}}
+                style={{
+                  padding: 8,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}
                 onPress={() => {
                   setSearchText(item);
                   onSearchHandler(item, 1, 2);
                 }}>
-                <Text style={{color: colors.text}}>{item}</Text>
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    gap: 20,
+                    alignItems: 'center',
+                  }}>
+                  <CustomIcon name="search" size={15} color={colors.text} />
+                  <Text style={{color: colors.text, fontSize: 15}}>{item}</Text>
+                </View>
               </Pressable>
             );
           }}

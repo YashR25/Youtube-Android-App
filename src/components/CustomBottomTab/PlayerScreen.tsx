@@ -188,7 +188,11 @@ export default function PlayerWidget() {
             <View style={styles.upNext}>
               <Text style={styles.title}>Up Next</Text>
               <FlatList
-                data={playlist ? playlist.videos : videos}
+                data={
+                  playlist
+                    ? playlist.videos.filter(item => item._id !== video._id)
+                    : videos?.filter(item => item._id !== video._id)
+                }
                 ListEmptyComponent={<Text>No Upcoming videos..</Text>}
                 renderItem={({item, index}) => (
                   <MiniVideoItem
